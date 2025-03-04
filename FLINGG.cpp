@@ -27,5 +27,14 @@ int main(int argc, char const *argv[]){
     N = N - N % B;
     training_features.resize(N);    // We only keep the first N features of the training set
 
-    
+    // We also want an "index" vector for the training features
+	std::vector<size_t> training_indices(training_features.size());
+	std::iota(training_indices.begin(), training_indices.end(), 0);    // Fills it with 0, 1, 2, ....
+
+    // Creating groups
+    std::shuffle(training_indices.begin(), training_indices.end(), std::default_random_engine(std::time(nullptr)));
+    std::vector<std::vector<size_t>> groups(B);
+    for (int i = 0; i < N; i++) {   // Other methods to make this copy are also O(N) anyways so this is fine
+        groups[i % B].push_back(training_indices[i]);
+    }
 }

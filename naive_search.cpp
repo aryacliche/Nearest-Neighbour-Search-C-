@@ -1,7 +1,7 @@
 #include "standard_header.h"
 
 bool compareFeatures(int index1, int index2, std::vector<VGGNetFeature>& features, VGGNetFeature& reference) {
-    return euclideanDistance(features[index1].values, reference.values) < euclideanDistance(features[index2].values, reference.values);
+    return cosineDistance(features[index1].values, reference.values) < cosineDistance(features[index2].values, reference.values);
 }
 
 int main(int argc, char const *argv[])
