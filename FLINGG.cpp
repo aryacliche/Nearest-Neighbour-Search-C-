@@ -31,10 +31,18 @@ int main(int argc, char const *argv[]){
 	std::vector<size_t> training_indices(training_features.size());
 	std::iota(training_indices.begin(), training_indices.end(), 0);    // Fills it with 0, 1, 2, ....
 
-    // Creating groups
+    // Creating groups randomly
     std::shuffle(training_indices.begin(), training_indices.end(), std::default_random_engine(std::time(nullptr)));
     std::vector<std::vector<size_t>> groups(B);
     for (int i = 0; i < N; i++) {   // Other methods to make this copy are also O(N) anyways so this is fine
         groups[i % B].push_back(training_indices[i]);
     }
-}
+
+    // Generating masks
+    // Each mask is a vector of m bool-vectors. We need B such masks. Thus finally masks will be a b x m x 2**L matrix OR vector of vector of vector of bools
+    std::vector<std::vector<std::vector<bool>>> masks(B, std::vector<std::vector<bool>>(m, std::vector<bool>(1 << L, false)));
+
+    // Generating hash functions
+    //TODO Implement this after deciding the hash function
+    // Each hash function will have d-dimensions of floats. We need m such hash functions. 
+}   
