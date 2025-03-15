@@ -1,5 +1,7 @@
 data/
 FLINNG/
+temp/
+ancillary_stuff/testing_LSH_results/
 .vscode/
 *.out
 *.gch
