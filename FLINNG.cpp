@@ -3,9 +3,10 @@
 int main(int argc, char const *argv[]){
     const std::string train_mask_filename = argv[1];//"data/vggnet_imagenet_train_features.bin";
 	const std::string val_mask_filename = argv[2];//"data/vggnet_imagenet_val_features.bin";
+    const std::string temp_dir = argv[3];   //"temp";
     int forced_N = -1;
-    if (argc == 4) {
-        forced_N = std::stoi(argv[3]);
+    if (argc == 5) {
+        forced_N = std::stoi(argv[4]);
     }
 
 	// Load the training dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
@@ -26,11 +27,11 @@ int main(int argc, char const *argv[]){
     int B = 2 * int(sqrt(N));
     int R = 25;
     int d = 4096;
-    int m = 10;
-    int t = 6;
+    int m = 100;
+    int t = 60;
     int L = 4;
     int l = 1 << L;
-    int w = 1;
+    double w = 1.0;
     N = N - N % B;
     training_features.resize(N);    // We only keep the first N features of the training set
 
@@ -54,7 +55,7 @@ int main(int argc, char const *argv[]){
     //// Generating hash functions
     // We will use p-stable LSH functions taken from the paper "Locality-Sensitive Hashing Scheme Based on p-Stable Distributions" by Piotr Indyk and Rajeev Motwani (https://dl.acm.org/doi/pdf/10.1145/997817.997857)
     std::vector<std::vector<float>> vecs(m, std::vector<float>(d));
-    std::vector<int> t_vals(m);
+    std::vector<double> t_vals(m);
     
     if (true) {
         // Generating and saving the vecs mask_file
@@ -62,7 +63,7 @@ int main(int argc, char const *argv[]){
         std::normal_distribution<float> distribution(0.0, 1.0);
 
         for (int i = 0; i < m; ++i) {
-            std::string vec_mask_filename = "temp/vec_"+std::to_string(i)+".bin";
+            std::string vec_mask_filename = temp_dir+"/vec_"+std::to_string(i)+".bin";
             std::ofstream vec_mask_file(vec_mask_filename, std::ios::binary);
             if (!vec_mask_file) {
                 throw std::runtime_error("Cannot open vec_mask_file");
@@ -76,16 +77,16 @@ int main(int argc, char const *argv[]){
         }
 
         // Let's generate the offset t for each hash function (and save it as well)
-        std::uniform_int_distribution<int> uniform_dist(0, w);
-        std::string t_mask_filename = "temp/t_values.bin";
+        std::uniform_real_distribution<double> uniform_dist(0, w);  
+        std::string t_mask_filename = temp_dir+"/t_values.bin";
         std::ofstream t_mask_file(t_mask_filename, std::ios::binary);
         if (!t_mask_file) {
             throw std::runtime_error("Cannot open t_file");
         }
         for (int i = 0; i < m; ++i) {
             t_vals[i] = uniform_dist(generator);
-            int t_value = t_vals[i];
-            t_mask_file.write(reinterpret_cast<char*>(&t_value), sizeof(int));
+            double t_value = t_vals[i];
+            t_mask_file.write(reinterpret_cast<char*>(&t_value), sizeof(double));
         }
         t_mask_file.close();
         
@@ -108,7 +109,7 @@ int main(int argc, char const *argv[]){
                 }
                 
                 // Saving the mask to disk
-                std::string mask_mask_filename = "temp/mask_" + std::to_string(r) + "_" + std::to_string(b) + ".bin";
+                std::string mask_mask_filename = temp_dir+"/mask_" + std::to_string(r) + "_" + std::to_string(b) + ".bin";
                 std::ofstream mask_mask_file(mask_mask_filename, std::ios::binary);
                 if (!mask_mask_file) {
                     throw std::runtime_error("Cannot open mask_mask_file");
@@ -131,7 +132,7 @@ int main(int argc, char const *argv[]){
     else {
         //// Loading the LSH functions
         for (int i = 0; i < m; i++) {
-            std::string vec_filename = "temp/vec_" + std::to_string(i) + ".bin";
+            std::string vec_filename = temp_dir+"/vec_" + std::to_string(i) + ".bin";
             std::ifstream vec_file(vec_filename, std::ios::binary);
             if (!vec_file) {
                 throw std::runtime_error("Cannot open vec_file");
@@ -144,14 +145,14 @@ int main(int argc, char const *argv[]){
             }
         }
 
-        std::string t_filename = "temp/t_values.bin";
+        std::string t_filename = temp_dir+"/t_values.bin";
         std::ifstream t_file(t_filename, std::ios::binary);
         if (!t_file) {
             throw std::runtime_error("Cannot open t_file");
         }
         for (int i = 0 ; i < m ; i ++) {
-            int t_value;
-            t_file.read(reinterpret_cast<char*>(&t_value), sizeof(int));
+            double t_value;
+            t_file.read(reinterpret_cast<char*>(&t_value), sizeof(double));
             t_vals[i] = t_value;
         }
 
@@ -161,7 +162,7 @@ int main(int argc, char const *argv[]){
         start = std::chrono::high_resolution_clock::now();
         for (int r = 0; r < R; r++) {
             for (int b = 0; b < B; b++) {
-            std::string mask_filename = "temp/mask_" + std::to_string(r) + "_" + std::to_string(b) + ".bin";
+            std::string mask_filename = temp_dir+"/mask_" + std::to_string(r) + "_" + std::to_string(b) + ".bin";
             std::ifstream mask_file(mask_filename, std::ios::binary);
             if (!mask_file) {
                 throw std::runtime_error("Cannot open mask_file");
