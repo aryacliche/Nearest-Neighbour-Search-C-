@@ -1,13 +1,27 @@
 #include "standard_header.h"
+#include "naive_search.h"
 
-bool compareFeatures(int index1, int index2, std::vector<VGGNetFeature>& features, VGGNetFeature& reference) {
-    return cosineDistance(features[index1].values, reference.values) < cosineDistance(features[index2].values, reference.values);
-}
+/*
+    Deprecated code : This function is not needed anymore
+    bool compareFeatures(int index1, int index2, std::vector<VGGNetFeature>& features, VGGNetFeature& reference) {
+        return euclideanDistance(features[index1].values, reference.values) < euclideanDistance(features[index2].values, reference.values);
+    }
+*/
 
 int main(int argc, char const *argv[])
 {
-	const std::string train_filename = argv[1];//"data/vggnet_imagenet_train_features.bin";
+	if (argc < 4) {
+        std::cerr << "Usage: " << argv[0] << " <train_features_file> <val_features_file> <K> [N]" << std::endl;
+        return 1;
+    }
+
+    const std::string train_filename = argv[1];//"data/vggnet_imagenet_train_features.bin";
 	const std::string val_filename = argv[2];//"data/vggnet_imagenet_val_features.bin";
+    const int K = std::stoi(argv[3]); // Number of neighbours we are interested in 
+    int forced_N = -1;
+    if (argc >= 5) {
+        forced_N = std::stoi(argv[4]);
+    }
 
 	// Load the training dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
     auto start = std::chrono::high_resolution_clock::now();
@@ -15,6 +29,9 @@ int main(int argc, char const *argv[])
 	auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
+
+    int N = (forced_N != -1) ? std::min(forced_N, static_cast<int>(training_features.size())) : training_features.size();
+    training_features.resize(N);    // We only keep the first N features of the training set
 
 	// Load the validation dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
 	start = std::chrono::high_resolution_clock::now();
@@ -29,18 +46,31 @@ int main(int argc, char const *argv[])
 
 	std::srand(std::time(nullptr)); // use current time as seed for random generator
     
-    auto running_total_time = 0;
+    auto running_total_time = 0.0;
 
     for (auto i = 0; i < 100; i++) {
         int random_index = std::rand() % val_features.size();
         VGGNetFeature random_query = val_features[random_index];
 
-        std::vector<size_t> sorted_indices(training_indices); // Makes a proper copy of training_indices
+        /*
+        Deprecated code : This sorts the entire dataset to find the K-nearest neighbours. This is not efficient.
+            std::vector<size_t> sorted_indices(training_indices); // Makes a proper copy of training_indices
+            std::sort(sorted_indices.begin(), sorted_indices.end(), [&](size_t a, size_t b) {
+                return compareFeatures(a, b, training_features, random_query);
+            });
+        */
         
+        ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
+
         start = std::chrono::high_resolution_clock::now();
-        std::sort(sorted_indices.begin(), sorted_indices.end(), [&](size_t a, size_t b) {
-            return compareFeatures(a, b, training_features, random_query);
-        });
+        
+        for (auto i = 0; i < N; i++) {
+            double distance = euclideanDistance(random_query.values, training_features[i].values);
+            ReportedNeighbours->checkAndInsert(i, distance);
+        }
+
+        std::vector<size_t> reported_neighbours = ReportedNeighbours->topKNeighbours();
+
         end = std::chrono::high_resolution_clock::now();
         elapsed_seconds = end - start;
         running_total_time += elapsed_seconds.count();
