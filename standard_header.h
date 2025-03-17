@@ -8,8 +8,10 @@
 #include <cmath>
 #include <algorithm> // For std::copy, std::sort
 #include <numeric>
-#include <random>
+#include <random>   
 #include <chrono>
+#include <unordered_map>
+#include <nlohmann/json.hpp>
 
 #define FEATURE_SIZE 4096
 
@@ -59,4 +61,31 @@ double cosineDistance(const std::array<float, FEATURE_SIZE>& a, const std::array
         return 1.0; // Return maximum distance if either vector is zero
     }
     return dot_product / (norm_a * norm_b);
+}
+
+std::vector<int> readLabelsAsInt(const std::string filename) {
+    std::ifstream file(filename);
+    if (!file) {
+        throw std::runtime_error("Cannot open file");
+    }
+
+    std::vector<std::string> labels;
+    std::string line;
+    while (std::getline(file, line)) {
+        labels.push_back(line);
+    }
+    
+    std::unordered_map<std::string, int> label_to_int;
+    int current_label = 0;
+    std::vector<int> int_labels(labels.size());
+
+    for (const auto& label : labels) {
+        if (label_to_int.find(label) == label_to_int.end()) {
+            label_to_int[label] = current_label++;
+        }
+    }
+
+    std::transform(labels.begin(), labels.end(), int_labels.begin(),
+                   [&label_to_int](const std::string& label) { return label_to_int[label]; });
+    return int_labels;
 }

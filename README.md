@@ -14,3 +14,4 @@ This is going to be initially modelled the way we wrote the FLINGG python code. 
 
 # Referenced code
 1. `psdLsh.h` is taken from [MyLSHBox](https://github.com/IenLong/MyLSHBOX). It implements the p-stable distribution LSH function which was described by [Locality-Sensitive Hashing Scheme Based on p-Stable Distributions](https://dl.acm.org/doi/pdf/10.1145/997817.997857) to work with $l_p$ norm spaces. (**Not used anymore**)
+2. `ancillary_stuff/json.hpp` is a clone of `nlohmann/json.hpp` which is a [popular C++ library](https://github.com/nlohmann/json/tree/develop) for working easily with JSON files. I used JSON files to store and validate configuations.
