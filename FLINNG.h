@@ -400,26 +400,29 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
 }
 
 void updateMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w, int t) {
-    bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l, w);
-    std::ifstream metadata_file(temp_dir + "/metadata.json");
-    if (!metadata_file) {
-        throw std::runtime_error("Cannot open older metadata file");
-    }
-
-    nlohmann::json old_metadata;
-    metadata_file >> old_metadata;
-    metadata_file.close();
-    
     nlohmann::json metadata;
     metadata["N"] = N;
     metadata["B"] = B;
-    metadata["R"] = (compatible_metadata==true) ? static_cast<int>(old_metadata["R"]) : R;
     metadata["m"] = m;
     metadata["d"] = d;
     metadata["l"] = l;
     metadata["w"] = w;
     metadata["t"] = t;
-
+    
+    
+    std::cout << "Updating " << temp_dir + "/metadata.json\n";
+    std::ifstream metadata_file(temp_dir + "/metadata.json");
+    if (!metadata_file) {
+        metadata["R"] = R;
+    }
+    else {
+        nlohmann::json old_metadata;
+        metadata_file >> old_metadata;
+        metadata_file.close();
+        bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l, w);
+        metadata["R"] = (compatible_metadata==true) ? static_cast<int>(old_metadata["R"]) : R;
+    }
+    
     std::ofstream file(temp_dir + "/metadata.json", std::ios::trunc);
     if (!file) {
         throw std::runtime_error("Cannot open metadata file");

@@ -88,7 +88,7 @@ int main(int argc, char const *argv[]){
 
     //// Querying with the validation set
     // Discarding contents of results.csv
-    std::ofstream csv_file(temp_dir + "/results.csv", std::ios::trunc);
+    std::ofstream csv_file(temp_dir + "/results_"+std::to_string(R)+".csv", std::ios::trunc);
     if (!csv_file) {
         throw std::runtime_error("Cannot open results CSV file");
     }
