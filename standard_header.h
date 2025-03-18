@@ -15,6 +15,18 @@
 
 #define FEATURE_SIZE 4096
 
+#ifdef DEBUG
+    #define DEBUG_PRINT std::cerr
+#else
+    #define DEBUG_PRINT if (false) std::cerr
+#endif
+
+#ifdef SHOW
+    #define DEEPER_DETAILS std::cerr
+#else
+    #define DEEPER_DETAILS if (false) std::cerr
+#endif
+
 struct VGGNetFeature {
     std::array<float, FEATURE_SIZE> values; // We know that each of the features is compuslorily 4096 dimensional   
 };

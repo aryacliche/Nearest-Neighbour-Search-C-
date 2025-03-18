@@ -4,18 +4,18 @@ import json
 import sys
 
 temp_dir = sys.argv[1]
+R = sys.argv[2]
+
 graph_dir = 'graphs'
 
 # Load CSV file
-csv_file = f'{temp_dir}/results.csv'
+csv_file = f'{temp_dir}/results_{R}.csv'
 data = pd.read_csv(csv_file)
 
 # Load JSON file
 json_file = f'{temp_dir}/metadata.json'
 with open(json_file, 'r') as f:
     info = json.load(f)
-
-print(data)
 
 # Extract information from JSON
 B = info.get('B', -1)

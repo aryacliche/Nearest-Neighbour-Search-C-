@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]){
         forced_N = std::stoi(argv[7]);
     }
 
-    int num_threads = 32;
+    int num_threads = 16;
     omp_set_num_threads(num_threads);
 
     // Verifying that OpenMP is enabled
@@ -76,7 +76,7 @@ int main(int argc, char const *argv[]){
     std::vector<std::vector<float>> vecs(m, std::vector<float>(d));
     std::vector<double> t_vals(m);
     
-    bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l);    
+    bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l, w);    
 
     if (masks_present == false) {
         offlinePrep(training_indices, training_labels, groups, masks, vecs, t_vals, temp_dir, training_features, N, B, R, m, d, l, w, group_creation_algorithm);
@@ -92,7 +92,7 @@ int main(int argc, char const *argv[]){
     if (!csv_file) {
         throw std::runtime_error("Cannot open results CSV file");
     }
-    csv_file << "precision" << "," << "recall" << "\n";
+    csv_file << "precision" << "," << "recall" << "," << "running_time" "\n";
     csv_file.close();
 
     double running_total_time = 0.0;

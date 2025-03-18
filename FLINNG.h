@@ -2,12 +2,6 @@
 #include "omp.h"
 #include "naive_search.h"
 
-#ifdef DEBUG
-    #define DEBUG_PRINT std::cerr
-#else
-    #define DEBUG_PRINT if (false) std::cerr
-#endif
-
 void random_group_creation (std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<size_t> training_indices, std::string temp_dir, int R, int B, int N) {
     //// Creating R x B groups of size N / B randomly
     for (int r = 0; r < R; r++) {
@@ -111,10 +105,13 @@ void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &train
     for (auto r = 0; r < R; r++) {
         for (auto b = 0; b < B; b++) {
             std::sort(groups[r][b].begin(), groups[r][b].end());    // We are sorting the group before we save it to save on intersection cost in online setup
+            
+            #ifdef DEBUG
             for (auto i = 0; i < N / B; i ++) {
                     DEBUG_PRINT << groups[r][b][i] << " ";
             }
             DEBUG_PRINT << std::endl;
+            #endif
         }
         DEBUG_PRINT << "------------------------------------" << std::endl;
     }
@@ -292,6 +289,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
     for (int r = 0; r < R; r++) {
         std::vector<size_t> iteration_neighbours;
         for (int b = 0; b < B; b++) {
+            #ifdef DEBUG
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < l; j++) {
                     if (masks[r][b][i][j] == true) {
@@ -301,11 +299,11 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
                 DEBUG_PRINT << std::endl;
             }
             DEBUG_PRINT << "------------\n" << std::endl;
+            #endif
 
             auto sum = 0;
             for (int i = 0; i < m; i++) {
-                if (masks[r][b][i][query_hash_values[i]]) 
-                    sum++;
+                sum += masks[r][b][i][query_hash_values[i]];        // Basically adds 1 if the mask is true thus is effectively counting collisions
             }
 
             if (sum >= t) {
@@ -345,6 +343,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
     elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Naive Search took : " << elapsed_seconds.count() << "ms\n";
 
+    #ifdef DEBUG
     DEBUG_PRINT << "Golden neighbours: ";
     for (auto i : golden_neighbours) {
         DEBUG_PRINT << i << " ";
@@ -356,6 +355,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
         DEBUG_PRINT << i << " ";
     }
     DEBUG_PRINT << std::endl;
+    #endif
 
     // Computing the precision and recall of reported_neighbours wrt golden_neighbours
     double true_positives = 0.0;
@@ -375,13 +375,13 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
     if (!csv_file) {
         throw std::runtime_error("Cannot open results CSV file");
     }
-    csv_file << precision << "," << recall << "\n";
+    csv_file << precision << "," << recall << "," << double(elapsed_seconds.count()) << "\n";
     csv_file.close();
 
     return double(elapsed_seconds.count());
 }
 
-bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l) {
+bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w) {
     std::ifstream metadata_file(temp_dir + "/metadata.json");
     if (!metadata_file) {
         return false;
@@ -391,7 +391,7 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
     metadata_file >> metadata;
     metadata_file.close();
 
-    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] >= R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l)) {
+    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] >= R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w)) {
         std::cout << "Metadata matches\n";
         return true;
     }
