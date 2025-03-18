@@ -1,6 +1,12 @@
 #include "standard_header.h"
 #include "omp.h"
 
+#ifdef DEBUG
+    #define DEBUG_PRINT std::cerr
+#else
+    #define DEBUG_PRINT if (false) std::cerr
+#endif
+
 void random_group_creation (std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<size_t> training_indices, std::string temp_dir, int R, int B, int N) {
     //// Creating R x B groups of size N / B randomly
     for (int r = 0; r < R; r++) {
@@ -73,7 +79,8 @@ void labelled_group_creation (std::vector<std::vector<std::vector<size_t>>> &gro
             ));
         }
 
-        groups.push_back(iter_groups);
+        groups[r] = iter_groups;
+        
         for (int b = 0; b < B; b++) {
             std::string group_filename = temp_dir+"/group_"+std::to_string(r)+"_"+std::to_string(b)+".bin";
             std::ofstream group_file(group_filename, std::ios::binary);
@@ -100,10 +107,21 @@ void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &train
         throw std::runtime_error("Invalid group_creation_algorithm");
     }
 
+    for (auto r = 0; r < R; r++) {
+        for (auto b = 0; b < B; b++) {
+            for (auto i = 0; i < N / B; i ++) {
+                    DEBUG_PRINT << groups[r][b][i] << " ";
+            }
+            DEBUG_PRINT << std::endl;
+        }
+        DEBUG_PRINT << "------------------------------------" << std::endl;
+    }
+
     // Generating and saving the vecs mask_file
     std::default_random_engine generator(std::time(nullptr));
     std::normal_distribution<float> distribution(0.0, 1.0);
 
+    #pragma omp parallel for
     for (int i = 0; i < m; ++i) {
         std::string vec_filename = temp_dir+"/vec_"+std::to_string(i)+".bin";
         std::ofstream vec_file(vec_filename, std::ios::binary);
@@ -169,8 +187,8 @@ void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &train
     }
 
     auto end = std::chrono::high_resolution_clock::now();
-    auto elapsed_seconds = end - start;
-    std::cout << "Time for making and saving masks: " << elapsed_seconds.count() << "s\n";
+    auto elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Time for making and saving masks: " << elapsed_seconds.count() << "ms\n";
 }
 
 void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> &t_vals, std::vector<std::vector<float>> &vecs, std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>>> &masks, int N, int B, int R, int l) {
@@ -241,8 +259,8 @@ void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> 
     }
 
     auto end = std::chrono::high_resolution_clock::now();
-    auto elapsed_seconds = end - start;
-    std::cout << "Time for making and saving masks: " << elapsed_seconds.count() << "s\n";
+    auto elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Time for loading masks: " << elapsed_seconds.count() << "ms\n";
 
     std::ofstream yes_file(temp_dir + "/yes.bin", std::ios::binary);
     yes_file.write("yes", 3);
@@ -256,6 +274,7 @@ double evaluateQuery(std::vector<size_t> &training_indices, std::vector<std::vec
     auto start = std::chrono::high_resolution_clock::now();
     
     // Calculating hash values of the query
+    DEBUG_PRINT << "query_hash_values: \n";
     for (int i = 0; i < m; i++) {
         float sum = 0;
         for (int j = 0; j < d; j++) {
@@ -263,12 +282,24 @@ double evaluateQuery(std::vector<size_t> &training_indices, std::vector<std::vec
         }
         int hash_val = (int((sum + t_vals[i]) / w) % l + l) % l;
         query_hash_values[i] = hash_val;
+        DEBUG_PRINT << hash_val << " ";
     }
+    DEBUG_PRINT << std::endl;
 
     // Checking against all the masks
     for (int r = 0; r < R; r++) {
         std::vector<size_t> iteration_neighbours;
         for (int b = 0; b < B; b++) {
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < l; j++) {
+                    if (masks[r][b][i][j] == true) {
+                        DEBUG_PRINT << "(" << i << "," << j << ") ";
+                    }
+                }
+                DEBUG_PRINT << std::endl;
+            }
+            DEBUG_PRINT << "------------\n" << std::endl;
+
             auto sum = 0;
             for (int i = 0; i < m; i++) {
                 if (masks[r][b][i][query_hash_values[i]]) 
@@ -279,6 +310,7 @@ double evaluateQuery(std::vector<size_t> &training_indices, std::vector<std::vec
                 iteration_neighbours.insert(iteration_neighbours.end(), groups[r][b].begin(), groups[r][b].end());
             }
         }
+        DEBUG_PRINT << "===============================\n" << std::endl;
 
         std::cout << "Number of neighbours reported in iteration " << r << ": " << iteration_neighbours.size() << std::endl;
 
@@ -307,12 +339,15 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
     metadata_file >> metadata;
     metadata_file.close();
 
-    return metadata["N"] == N && metadata["B"] == B && metadata["R"] == R && metadata["m"] == m && metadata["d"] == d && metadata["l"] == l && metadata["w"] == w; 
+    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] == R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w))
+        std::cout << "Metadata matches\n";
+    else
+        std::cout << "Metadata does not match\n";
+
+    return ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] == R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w)); 
 }
 
 void updateMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w) {
-    
-
     nlohmann::json metadata;
     metadata["N"] = N;
     metadata["B"] = B;

@@ -23,28 +23,35 @@ int main(int argc, char const *argv[]){
         std::cout << "OpenMP is NOT enabled!" << std::endl;
     #endif
 
-	// Load the training dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_features_file_name);
-    std::vector<int> training_labels = readLabelsAsInt(train_labels_file_name);
-	auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
+    std::cout << "Huh";
+
+	// Estimate the size of the training dataset
+    std::ifstream file(train_features_file_name, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Cannot open file");
+    }
+
+    int N, d;
+    file.read(reinterpret_cast<char*>(&N), sizeof(int));
+    file.read(reinterpret_cast<char*>(&d), sizeof(int));
+    N = (forced_N != -1) ? std::min(forced_N, N) : N;
+    int B = 2 * int(sqrt(N));
+    N = N - N % B;
+
+    std::cout << "Huhhu";
 
 	// Load the validation dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
-	start = std::chrono::high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
     std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_features_file_name);
     std::vector<int> val_labels = readLabelsAsInt(val_labels_file_name);
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_seconds = end - start;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Time for loading validation dataset: " << elapsed_seconds.count() << "s\n";
 
-    int N = (forced_N != -1) ? std::min(forced_N, static_cast<int>(training_features.size())) : training_features.size();
-    int B = 2 * int(sqrt(N));
-    int d = 4096;
-    N = N - N % B;
-    training_features.resize(N);    // We only keep the first N features of the training set
-    
+    // We also want an "index" vector for the training features
+    std::vector<size_t> training_indices(N);
+	std::iota(training_indices.begin(), training_indices.end(), 0);    // Fills it with 0, 1, 2, ....
+
     // Parameters that should be read from a config file
     std::ifstream config_file("config.json");
     if (!config_file) {
@@ -53,7 +60,7 @@ int main(int argc, char const *argv[]){
     nlohmann::json config;
     config_file >> config;
     config_file.close();
-
+    
     int R = config["R"];
     int t = config["t"];
     int m = config["m"];
@@ -61,10 +68,6 @@ int main(int argc, char const *argv[]){
     double w = config["w"];
     
     int l = 1 << L; 
-
-    // We also want an "index" vector for the training features
-    std::vector<size_t> training_indices(training_features.size());
-	std::iota(training_indices.begin(), training_indices.end(), 0);    // Fills it with 0, 1, 2, ....
 
     // Initialise R x B groups of size N / B
     std::vector<std::vector<std::vector<size_t>>> groups(R, std::vector<std::vector<size_t>>(B, std::vector<size_t>(N / B))); // TODO : Make this into an array if possible
@@ -78,7 +81,17 @@ int main(int argc, char const *argv[]){
     
     bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l, w);    
 
-    if (!masks_present) {
+    if (masks_present == false) {
+        // We now need to load the training dataset.
+        start = std::chrono::high_resolution_clock::now();
+        std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_features_file_name);
+        std::vector<int> training_labels = readLabelsAsInt(train_labels_file_name);
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_seconds = end - start;
+        std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
+
+        training_features.resize(N);    // We only keep the first N features of the training set
+
         offlinePrep(training_indices, training_labels, groups, masks, vecs, t_vals, temp_dir, training_features, N, B, R, m, d, l, w, group_creation_algorithm);
         updateMetadata(temp_dir, N, B, R, m, d, l, w);
     }
