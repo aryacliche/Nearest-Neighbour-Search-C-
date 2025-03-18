@@ -76,7 +76,7 @@ int main(int argc, char const *argv[]){
     std::vector<std::vector<float>> vecs(m, std::vector<float>(d));
     std::vector<double> t_vals(m);
     
-    bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l, w);    
+    bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l);    
 
     if (masks_present == false) {
         offlinePrep(training_indices, training_labels, groups, masks, vecs, t_vals, temp_dir, training_features, N, B, R, m, d, l, w, group_creation_algorithm);

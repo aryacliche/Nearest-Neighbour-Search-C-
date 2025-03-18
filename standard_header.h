@@ -48,7 +48,7 @@ double euclideanDistance(const std::array<float, FEATURE_SIZE>& a, const std::ar
                    [](float x, float y) { return x - y; });
     
     float sum_of_squares = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0f);
-    return std::sqrt(sum_of_squares);
+    return sum_of_squares;
 }
 
 double cosineDistance(const std::array<float, FEATURE_SIZE>& a, const std::array<float, FEATURE_SIZE>& b) {

@@ -1,5 +1,5 @@
-import pandas as pd
-import matplotlib.pyplot as plt
+import pandas as pd #type: ignore
+import matplotlib.pyplot as plt #type: ignore
 import json
 import sys
 

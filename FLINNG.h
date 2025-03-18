@@ -110,6 +110,7 @@ void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &train
 
     for (auto r = 0; r < R; r++) {
         for (auto b = 0; b < B; b++) {
+            std::sort(groups[r][b].begin(), groups[r][b].end());    // We are sorting the group before we save it to save on intersection cost in online setup
             for (auto i = 0; i < N / B; i ++) {
                     DEBUG_PRINT << groups[r][b][i] << " ";
             }
@@ -380,7 +381,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
     return double(elapsed_seconds.count());
 }
 
-bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w) {
+bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l) {
     std::ifstream metadata_file(temp_dir + "/metadata.json");
     if (!metadata_file) {
         return false;
@@ -390,7 +391,7 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
     metadata_file >> metadata;
     metadata_file.close();
 
-    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] >= R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w)) {
+    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] >= R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l)) {
         std::cout << "Metadata matches\n";
         return true;
     }
@@ -399,7 +400,7 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
 }
 
 void updateMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w, int t) {
-    bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l, w);
+    bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l);
     std::ifstream metadata_file(temp_dir + "/metadata.json");
     if (!metadata_file) {
         throw std::runtime_error("Cannot open older metadata file");
