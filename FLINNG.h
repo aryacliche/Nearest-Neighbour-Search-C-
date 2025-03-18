@@ -1,5 +1,6 @@
 #include "standard_header.h"
 #include "omp.h"
+#include "naive_search.h"
 
 #ifdef DEBUG
     #define DEBUG_PRINT std::cerr
@@ -267,7 +268,7 @@ void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> 
     yes_file.close();
 }
 
-double evaluateQuery(std::vector<size_t> &training_indices, std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>> > &masks, std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, VGGNetFeature &random_query, int N, int B, int R, int m, int d, int l, double w, int t) {
+double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<size_t> &training_indices, std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>> > &masks, std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, VGGNetFeature &random_query, int N, int B, int R, int m, int d, int l, double w, int t, std::string temp_dir) {
     std::vector<size_t> query_hash_values(m);   // This stores the hash values of the query
     std::vector<size_t> reported_neighbours(training_indices); // Makes a proper copy of training_indices. Will finally be the reported neighbours
     
@@ -326,6 +327,56 @@ double evaluateQuery(std::vector<size_t> &training_indices, std::vector<std::vec
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Execution time: " << elapsed_seconds.count() << "ms\n";
     std::cout << "          Number of neighbours reported finally : " << reported_neighbours.size() << std::endl;
+
+    // Now in order to check the correctness of the reported neighbours, we will run naive search on this as well
+    int K = 10;
+    ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
+
+    start = std::chrono::high_resolution_clock::now();
+    
+    for (auto i = 0; i < N; i++) {
+        double distance = euclideanDistance(random_query.values, training_features[i].values);
+        ReportedNeighbours->checkAndInsert(i, distance);
+    }
+
+    std::vector<size_t> golden_neighbours = ReportedNeighbours->topKNeighbours();
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Naive Search took : " << elapsed_seconds.count() << "ms\n";
+
+    DEBUG_PRINT << "Golden neighbours: ";
+    for (auto i : golden_neighbours) {
+        DEBUG_PRINT << i << " ";
+    }
+    DEBUG_PRINT << std::endl;
+
+    DEBUG_PRINT << "Reported neighbours: ";
+    for (auto i : reported_neighbours) {
+        DEBUG_PRINT << i << " ";
+    }
+    DEBUG_PRINT << std::endl;
+
+    // Computing the precision and recall of reported_neighbours wrt golden_neighbours
+    double true_positives = 0.0;
+    for (auto i : golden_neighbours) {
+        if (std::find(reported_neighbours.begin(), reported_neighbours.end(), i) != reported_neighbours.end()) {
+            true_positives++;
+        }
+    }
+    double precision = true_positives / double(reported_neighbours.size());
+    double recall = true_positives / K;
+    std::cout << "-----------" << std::endl;
+    std::cout << "| Precision = " << precision << std::endl;
+    std::cout << "| Recall = " << recall << std::endl;
+    std::cout << "-----------" << std::endl;
+    // Write precision and recall into a CSV file
+    std::ofstream csv_file(temp_dir + "/results_"+std::to_string(R)+".csv", std::ios::app);
+    if (!csv_file) {
+        throw std::runtime_error("Cannot open results CSV file");
+    }
+    csv_file << precision << "," << recall << "\n";
+    csv_file.close();
+
     return double(elapsed_seconds.count());
 }
 
@@ -339,23 +390,34 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
     metadata_file >> metadata;
     metadata_file.close();
 
-    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] == R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w))
+    if ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] >= R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w)) {
         std::cout << "Metadata matches\n";
-    else
-        std::cout << "Metadata does not match\n";
-
-    return ((metadata["N"] == N) && (metadata["B"] == B) && (metadata["R"] == R) && (metadata["m"] == m) && (metadata["d"] == d) && (metadata["l"] == l) && (metadata["w"] == w)); 
+        return true;
+    }
+    std::cout << "Metadata does not match\n";
+    return false;
 }
 
-void updateMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w) {
+void updateMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w, int t) {
+    bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l, w);
+    std::ifstream metadata_file(temp_dir + "/metadata.json");
+    if (!metadata_file) {
+        throw std::runtime_error("Cannot open older metadata file");
+    }
+
+    nlohmann::json old_metadata;
+    metadata_file >> old_metadata;
+    metadata_file.close();
+    
     nlohmann::json metadata;
     metadata["N"] = N;
     metadata["B"] = B;
-    metadata["R"] = R;
+    metadata["R"] = (compatible_metadata==true) ? static_cast<int>(old_metadata["R"]) : R;
     metadata["m"] = m;
     metadata["d"] = d;
     metadata["l"] = l;
     metadata["w"] = w;
+    metadata["t"] = t;
 
     std::ofstream file(temp_dir + "/metadata.json", std::ios::trunc);
     if (!file) {
