@@ -400,7 +400,7 @@ bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int 
 }
 
 void updateMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w, int t) {
-    bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l);
+    bool compatible_metadata = checkMetadata(temp_dir, N, B, R, m, d, l, w);
     std::ifstream metadata_file(temp_dir + "/metadata.json");
     if (!metadata_file) {
         throw std::runtime_error("Cannot open older metadata file");
