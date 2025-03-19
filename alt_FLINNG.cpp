@@ -1,4 +1,4 @@
-#include "FLINNG.h"
+#include "alt_FLINNG.h"
 
 int main(int argc, char const *argv[]){
     // Taking in inputs
@@ -13,8 +13,10 @@ int main(int argc, char const *argv[]){
         forced_N = std::stoi(argv[7]);
     }
 
-    int num_threads = 16;
+    int num_threads = 24;
     omp_set_num_threads(num_threads);
+
+    uint32_t K = 100; // Number of neighbours we want.
 
     // Verifying that OpenMP is enabled
     #ifdef _OPENMP
@@ -44,10 +46,6 @@ int main(int argc, char const *argv[]){
     N = N - N % B;
     training_features.resize(N);    // We only keep the first N features of the training set
 
-    // We also want an "index" vector for the training features
-    std::vector<uint64_t> training_indices(N);
-	std::iota(training_indices.begin(), training_indices.end(), 0);    // Fills it with 0, 1, 2, ....
-
     // Parameters that should be read from a config file
     std::ifstream config_file("config.json");
     if (!config_file) {
@@ -56,7 +54,6 @@ int main(int argc, char const *argv[]){
     nlohmann::json config;
     config_file >> config;
     config_file.close();
-    
     int d = 4096;
     int R = config["R"];
     int t = config["t"];
@@ -66,43 +63,67 @@ int main(int argc, char const *argv[]){
     
     int l = 1 << L; 
 
-    // Initialise R x B groups of size N / B
-    std::vector<std::vector<std::vector<uint64_t>>> groups(R, std::vector<std::vector<uint64_t>>(B, std::vector<uint64_t>(N / B))); // TODO : Make this into an array if possible
-    
-    // Each mask is a vector of m bool-vectors. We need B such masks per iteration. There are R iterations. Thus finally masks will be a R x B x m x 2**L matrix OR vector of vector of vector of vector of bools
-    std::vector<std::vector<std::vector<std::vector<bool>>>> masks(R, std::vector<std::vector<std::vector<bool>>>(B, std::vector<std::vector<bool>>(m, std::vector<bool>(l, false))));
-
     // We will use p-stable LSH functions taken from the paper "Locality-Sensitive Hashing Scheme Based on p-Stable Distributions" by Piotr Indyk and Rajeev Motwani (https://dl.acm.org/doi/pdf/10.1145/997817.997857)
     std::vector<std::vector<float>> vecs(m, std::vector<float>(d));
     std::vector<double> t_vals(m);
     
+    Flinng flinng(R, B, m, l);
+
     bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l, w);    
 
     if (masks_present == false) {
-        offlinePrep(training_indices, training_labels, groups, masks, vecs, t_vals, temp_dir, training_features, N, B, R, m, d, l, w, group_creation_algorithm);
+        offlinePrep(vecs, t_vals, temp_dir, training_features, training_labels, group_creation_algorithm, N, m, d, l, w, flinng);
     }
     else {
-        loadProcessedData(m, d, temp_dir, t_vals, vecs, groups, masks, N, B, R, l);
+        flinng.load_from_disk(temp_dir);
+        for (int i = 0; i < m; i++) {
+            std::string vec_filename = temp_dir+"/vec_" + std::to_string(i) + ".bin";
+            std::ifstream vec_file(vec_filename, std::ios::binary);
+            if (!vec_file) {
+                throw std::runtime_error("Cannot open vec_file");
+            }
+    
+            for (int j = 0; j < d; j++) {
+                float vec_value;
+                vec_file.read(reinterpret_cast<char*>(&vec_value), sizeof(float));
+                vecs[i][j] = vec_value;
+            }
+        }
+    
+        std::string t_filename = temp_dir+"/t_values.bin";
+        std::ifstream t_file(t_filename, std::ios::binary);
+        if (!t_file) {
+            throw std::runtime_error("Cannot open t_file");
+        }
+        for (int i = 0 ; i < m ; i ++) {
+            double t_value;
+            t_file.read(reinterpret_cast<char*>(&t_value), sizeof(double));
+            t_vals[i] = t_value;
+        }
+    
+        std::cout << "LSH functions loaded successfully\n";
     }
     updateMetadata(temp_dir, N, B, R, m, d, l, w, t);   
 
+    // Just before we start the query phase
+    flinng.prepareForQueries();
+
     //// Querying with the validation set
     // Discarding contents of results.csv
-    std::ofstream csv_file(temp_dir + "/results_"+std::to_string(R)+".csv", std::ios::trunc);
+    std::ofstream csv_file(temp_dir + "/results.csv", std::ios::trunc);
     if (!csv_file) {
         throw std::runtime_error("Cannot open results CSV file");
     }
     csv_file << "precision" << "," << "recall" << "," << "running_time" "\n";
     csv_file.close();
 
-    double running_total_time = 0.0;
     int num_queries = 100;
-    #pragma omp parallel for reduction(+:running_total_time)
+    std::vector<VGGNetFeature> queries;
+    queries.reserve(num_queries);
     for (auto i = 0; i < num_queries; i++) {
-        int random_index = std::rand() % val_features.size();
-        VGGNetFeature random_query = val_features[random_index];
-        running_total_time += evaluateQuery(training_features, training_indices, groups, masks, vecs, t_vals, random_query, N, B, R, m, d, l, w, t, temp_dir);
+        queries.push_back(val_features[std::rand() % val_features.size()]);
     }
+    double running_total_time = evaluateQuery(vecs, t_vals, queries, K, num_queries, m, l, w, temp_dir, flinng, training_features);
     std::cout << "Average time: " << running_total_time / num_queries << "ms\n";
     std::cout << "Done" << std::endl;
 }   

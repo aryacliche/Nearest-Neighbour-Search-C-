@@ -75,7 +75,7 @@ double cosineDistance(const std::array<float, FEATURE_SIZE>& a, const std::array
     return dot_product / (norm_a * norm_b);
 }
 
-std::vector<int> readLabelsAsInt(const std::string filename) {
+std::vector<uint64_t> readLabelsAsInt(const std::string filename) {
     std::ifstream file(filename);
     if (!file) {
         throw std::runtime_error("Cannot open file");
@@ -89,7 +89,7 @@ std::vector<int> readLabelsAsInt(const std::string filename) {
     
     std::unordered_map<std::string, int> label_to_int;
     int current_label = 0;
-    std::vector<int> int_labels(labels.size());
+    std::vector<u_int64_t> int_labels(labels.size());
 
     for (const auto& label : labels) {
         if (label_to_int.find(label) == label_to_int.end()) {

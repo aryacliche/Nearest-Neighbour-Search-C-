@@ -3,8 +3,8 @@ import subprocess
 
 def main():
     json_file_path = 'config.json'
-    for r in range(25, 1, -1):
-        for t in range(10, 95, 5):
+    for r in range(3, 1, -1):
+        for t in range(95, 10, -5):
             with open(json_file_path, 'r') as file:
                 data = json.load(file)
             

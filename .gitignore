@@ -2,6 +2,7 @@ data/
 history/
 FLINNG/
 temp/
+alt_temp/
 ancillary_stuff/testing_LSH_results/
 .vscode/
 *.out

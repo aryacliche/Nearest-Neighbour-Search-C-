@@ -2,7 +2,7 @@
 #include "omp.h"
 #include "naive_search.h"
 
-void random_group_creation (std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<size_t> training_indices, std::string temp_dir, int R, int B, int N) {
+void random_group_creation (std::vector<std::vector<std::vector<uint64_t>>> &groups, std::vector<uint64_t> training_indices, std::string temp_dir, int R, int B, int N) {
     //// Creating R x B groups of size N / B randomly
     for (int r = 0; r < R; r++) {
         std::shuffle(training_indices.begin(), training_indices.end(), std::default_random_engine(std::time(nullptr))); // TODO : Verify that this is properly permuting the thing.
@@ -14,28 +14,28 @@ void random_group_creation (std::vector<std::vector<std::vector<size_t>>> &group
             }
             for (auto i = 0; i < N / B; i ++) {
                 groups[r][b][i] = training_indices[i + b * (N / B)];
-                size_t group_value = groups[r][b][i];
-                group_file.write(reinterpret_cast<char*>(&group_value), sizeof(size_t));
+                uint64_t group_value = groups[r][b][i];
+                group_file.write(reinterpret_cast<char*>(&group_value), sizeof(uint64_t));
             }
         }
     }
 }
 
-void labelled_group_creation (std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<size_t> training_indices, std::vector<int> &training_labels, std::string temp_dir, int R, int B, int N) {
-    std::vector<size_t> unique_clusters(training_labels.begin(), training_labels.end());
+void labelled_group_creation (std::vector<std::vector<std::vector<uint64_t>>> &groups, std::vector<uint64_t> training_indices, std::vector<uint64_t> &training_labels, std::string temp_dir, int R, int B, int N) {
+    std::vector<uint64_t> unique_clusters(training_labels.begin(), training_labels.end());
     std::sort(unique_clusters.begin(), unique_clusters.end());
     unique_clusters.erase(std::unique(unique_clusters.begin(), unique_clusters.end()), unique_clusters.end());
     std::mt19937 rng(std::time(nullptr));
 
     for (auto r = 0 ; r < R ; r++) {
-        std::vector<std::vector<size_t>> iter_groups;
-        std::vector<size_t> outcasts;
+        std::vector<std::vector<uint64_t>> iter_groups;
+        std::vector<uint64_t> outcasts;
 
-        for (size_t cluster : unique_clusters) {
-            std::vector<size_t> cluster_indices;
+        for (uint64_t cluster : unique_clusters) {
+            std::vector<uint64_t> cluster_indices;
             
             // Find indices belonging to this cluster
-            for (size_t i = 0; i < training_labels.size(); ++i) {
+            for (uint64_t i = 0; i < training_labels.size(); ++i) {
                 if (training_labels[i] == cluster && i < N) {
                     cluster_indices.push_back(i);
                 }
@@ -44,11 +44,11 @@ void labelled_group_creation (std::vector<std::vector<std::vector<size_t>>> &gro
             // Shuffle the indices
             std::shuffle(cluster_indices.begin(), cluster_indices.end(), rng);
 
-            size_t group_size = N / B;
-            size_t num_pure_groups = cluster_indices.size() / group_size;
+            uint64_t group_size = N / B;
+            uint64_t num_pure_groups = cluster_indices.size() / group_size;
 
-            for (size_t i = 0; i < num_pure_groups; ++i) {
-                iter_groups.push_back(std::vector<size_t>(
+            for (uint64_t i = 0; i < num_pure_groups; ++i) {
+                iter_groups.push_back(std::vector<uint64_t>(
                     cluster_indices.begin() + i * group_size,
                     cluster_indices.begin() + (i + 1) * group_size
                 ));
@@ -64,11 +64,11 @@ void labelled_group_creation (std::vector<std::vector<std::vector<size_t>>> &gro
         std::shuffle(outcasts.begin(), outcasts.end(), rng);
 
         // Distribute outcasts into additional groups
-        size_t group_size = N / B;
-        size_t num_extra_groups = outcasts.size() / group_size;
+        uint64_t group_size = N / B;
+        uint64_t num_extra_groups = outcasts.size() / group_size;
         
-        for (size_t i = 0; i < num_extra_groups; ++i) {
-            iter_groups.push_back(std::vector<size_t>(
+        for (uint64_t i = 0; i < num_extra_groups; ++i) {
+            iter_groups.push_back(std::vector<uint64_t>(
                 outcasts.begin() + i * group_size,
                 outcasts.begin() + (i + 1) * group_size
             ));
@@ -83,14 +83,14 @@ void labelled_group_creation (std::vector<std::vector<std::vector<size_t>>> &gro
                 throw std::runtime_error("Cannot open group_file");
             }
             for (auto i = 0; i < N / B; i ++) {
-                size_t group_value = groups[r][b][i];
-                group_file.write(reinterpret_cast<char*>(&group_value), sizeof(size_t));
+                uint64_t group_value = groups[r][b][i];
+                group_file.write(reinterpret_cast<char*>(&group_value), sizeof(uint64_t));
             }
         }
     }
 }
 
-void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &training_labels, std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>>> &masks, std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::string temp_dir, std::vector<VGGNetFeature> &training_features, int N, int B, int R, int m, int d, int l, double w, std::string group_creation_algorithm) {
+void offlinePrep (std::vector<uint64_t> &training_indices, std::vector<uint64_t> &training_labels, std::vector<std::vector<std::vector<uint64_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>>> &masks, std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::string temp_dir, std::vector<VGGNetFeature> &training_features, int N, int B, int R, int m, int d, int l, double w, std::string group_creation_algorithm) {
     
     if (group_creation_algorithm == "random") {
         random_group_creation(groups, training_indices, temp_dir, R, B, N);
@@ -159,11 +159,12 @@ void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &train
         for (int b = 0; b < B; b++) {
             for (int i = 0; i < N / B; i++) {
                 for (int j = 0; j < m; j++) {
-                    float sum = 0;
-                    for (int k = 0; k < d; k++) {
-                        sum += vecs[j][k] * training_features[groups[r][b][i]].values[k];
-                    }
-                    int hash_val = (int((sum + t_vals[j]) / w) % (l) + l) % l;  // I need to do it this way because C++ will output -7 % 5 = -2 instead of 3.
+                    float dot_prod = std::inner_product(
+                        vecs[j].begin(), vecs[j].end(),
+                        training_features[groups[r][b][i]].values.begin(),
+                        0.0f
+                    );
+                    int hash_val = (int((dot_prod + t_vals[j]) / w) % (l) + l) % l;  // I need to do it this way because C++ will output -7 % 5 = -2 instead of 3.
                     masks[r][b][j][hash_val] = true;
                 }
             }
@@ -190,7 +191,7 @@ void offlinePrep (std::vector<size_t> &training_indices, std::vector<int> &train
     std::cout << "Time for making and saving masks: " << elapsed_seconds.count() << "ms\n";
 }
 
-void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> &t_vals, std::vector<std::vector<float>> &vecs, std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>>> &masks, int N, int B, int R, int l) {
+void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> &t_vals, std::vector<std::vector<float>> &vecs, std::vector<std::vector<std::vector<uint64_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>>> &masks, int N, int B, int R, int l) {
     //// Loading the LSH functions
     for (int i = 0; i < m; i++) {
         std::string vec_filename = temp_dir+"/vec_" + std::to_string(i) + ".bin";
@@ -230,8 +231,8 @@ void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> 
             }
 
             for (int i = 0; i < N / B; i++) {
-                size_t group_value;
-                group_file.read(reinterpret_cast<char*>(&group_value), sizeof(size_t));
+                uint64_t group_value;
+                group_file.read(reinterpret_cast<char*>(&group_value), sizeof(uint64_t));
                 groups[r][b][i] = group_value;
             }
         }
@@ -266,9 +267,9 @@ void loadProcessedData (int m, int d, std::string temp_dir, std::vector<double> 
     yes_file.close();
 }
 
-double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<size_t> &training_indices, std::vector<std::vector<std::vector<size_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>> > &masks, std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, VGGNetFeature &random_query, int N, int B, int R, int m, int d, int l, double w, int t, std::string temp_dir) {
-    std::vector<size_t> query_hash_values(m);   // This stores the hash values of the query
-    std::vector<size_t> reported_neighbours(training_indices); // Makes a proper copy of training_indices. Will finally be the reported neighbours
+double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<uint64_t> &training_indices, std::vector<std::vector<std::vector<uint64_t>>> &groups, std::vector<std::vector<std::vector<std::vector<bool>>> > &masks, std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, VGGNetFeature &random_query, int N, int B, int R, int m, int d, int l, double w, int t, std::string temp_dir) {
+    std::vector<uint64_t> query_hash_values(m);   // This stores the hash values of the query
+    std::vector<uint64_t> reported_neighbours(training_indices); // Makes a proper copy of training_indices. Will finally be the reported neighbours
     
     auto start = std::chrono::high_resolution_clock::now();
     
@@ -287,7 +288,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
 
     // Checking against all the masks
     for (int r = 0; r < R; r++) {
-        std::vector<size_t> iteration_neighbours;
+        std::vector<uint64_t> iteration_neighbours;
         for (int b = 0; b < B; b++) {
             #ifdef DEBUG
             for (int i = 0; i < m; i++) {
@@ -317,7 +318,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
         // Take intersection of reported neighbours and the current set of neighbours
         std::sort(iteration_neighbours.begin(), iteration_neighbours.end());
         std::sort(reported_neighbours.begin(), reported_neighbours.end());
-        std::vector<size_t> new_reported_neighbours;
+        std::vector<uint64_t> new_reported_neighbours;
         std::set_intersection(iteration_neighbours.begin(), iteration_neighbours.end(), reported_neighbours.begin(), reported_neighbours.end(), std::back_inserter(new_reported_neighbours));
         reported_neighbours = new_reported_neighbours;
     }
@@ -338,7 +339,7 @@ double evaluateQuery(std::vector<VGGNetFeature> &training_features, std::vector<
         ReportedNeighbours->checkAndInsert(i, distance);
     }
 
-    std::vector<size_t> golden_neighbours = ReportedNeighbours->topKNeighbours();
+    std::vector<uint64_t> golden_neighbours = ReportedNeighbours->topKNeighbours();
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Naive Search took : " << elapsed_seconds.count() << "ms\n";
