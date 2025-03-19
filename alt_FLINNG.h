@@ -179,7 +179,7 @@ class Flinng {
           }
 
           for (uint32_t i = 0; i < num_hash_tables + 1; ++i) {
-            std::cout << "collisions = " << i << " : " << sorted[i].size() << std::endl;
+            DEBUG_PRINT << "collisions = " << i << " : " << sorted[i].size() << std::endl;
           }
     
           if (num_rows > 2) {
@@ -232,13 +232,6 @@ class Flinng {
     
         for (auto i = 0; i < inverted_flinng_index.size(); i++) {
           uint64_t size = inverted_flinng_index[i].size();
-          
-          #ifdef DEBUG
-          if (size > 10000) {
-            std::cout << "Size is " << size << std::endl;
-          }
-          #endif
-
           index_file.write(reinterpret_cast<char*>(&size), sizeof(uint64_t));
           index_file.write(reinterpret_cast<char*>(inverted_flinng_index[i].data()), size * sizeof(uint32_t));
         }
@@ -275,9 +268,6 @@ class Flinng {
         for (uint64_t i = 0; i < inverted_flinng_index.size(); i++) {
           uint64_t size;
           index_file.read(reinterpret_cast<char*>(&size), sizeof(uint64_t));
-          #ifdef DEBUG
-          std::cout << "Size is " << size << std::endl;
-          #endif
           inverted_flinng_index[i].resize(size);
           index_file.read(reinterpret_cast<char*>(inverted_flinng_index[i].data()), size * sizeof(uint32_t));
         }
@@ -393,6 +383,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
             );
             DEBUG_PRINT << "Dot prod = " << dot_prod <<  ", t_vals[j] = " << t_vals[j] << ", w = " << w << ", l = " << l<< std::endl;
             DEBUG_PRINT << "Final = " << uint64_t((int((dot_prod + t_vals[j]) / w) % l + l) % l) << std::endl;
+
             query_hash_values[i * m + j] = uint64_t((int((dot_prod + t_vals[j]) / w) % l + l) % l);
         }
     }
@@ -417,21 +408,20 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     std::cout << "          Number of neighbours reported finally : " << reported_neighbours.size() << std::endl;
 
     // Now in order to check the correctness of the reported neighbours, we will run naive search on this as well
-    std::vector<uint64_t> golden_neighbours;
+    std::vector<uint64_t> golden_neighbours(num_queries * K);
     start = std::chrono::high_resolution_clock::now();
-    #pragma omp parallel for
-    for (auto query: queries) {
+    #pragma omp parallel for shared(golden_neighbours)
+    for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
-        for (auto i = 0; i < training_features.size(); i++) {
-            double distance = euclideanDistance(query.values, training_features[i].values);
-            ReportedNeighbours->checkAndInsert(i, distance);
+        for (auto j = 0; j < training_features.size(); j++) {
+            double distance = euclideanDistance(queries[i].values, training_features[j].values);
+            ReportedNeighbours->checkAndInsert(j, distance);
         }
     
         std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
-        #pragma omp critical
-        {
-            golden_neighbours.insert(golden_neighbours.end(),curr_golden_neighbours.begin(), curr_golden_neighbours.end());
+        for (auto j = 0; j < K; j++) {
+            golden_neighbours[i * K + j] = curr_golden_neighbours[j];
         }
     }
     end = std::chrono::high_resolution_clock::now();

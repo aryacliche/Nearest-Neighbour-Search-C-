@@ -76,6 +76,8 @@ int main(int argc, char const *argv[]){
     }
     else {
         flinng.load_from_disk(temp_dir);
+
+        // Also update the vecs and t_vals
         for (int i = 0; i < m; i++) {
             std::string vec_filename = temp_dir+"/vec_" + std::to_string(i) + ".bin";
             std::ifstream vec_file(vec_filename, std::ios::binary);
@@ -123,6 +125,7 @@ int main(int argc, char const *argv[]){
     for (auto i = 0; i < num_queries; i++) {
         queries.push_back(val_features[std::rand() % val_features.size()]);
     }
+    DEBUG_PRINT << "Size of queries = " << queries.size() << "\n";
     double running_total_time = evaluateQuery(vecs, t_vals, queries, K, num_queries, m, l, w, temp_dir, flinng, training_features);
     std::cout << "Average time: " << running_total_time / num_queries << "ms\n";
     std::cout << "Done" << std::endl;

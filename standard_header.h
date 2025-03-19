@@ -16,9 +16,9 @@
 #define FEATURE_SIZE 4096
 
 #ifdef DEBUG
-    #define DEBUG_PRINT std::cerr
+    #define DEBUG_PRINT std::cout
 #else
-    #define DEBUG_PRINT if (false) std::cerr
+    #define DEBUG_PRINT if (false) std::cout
 #endif
 
 #ifdef SHOW
