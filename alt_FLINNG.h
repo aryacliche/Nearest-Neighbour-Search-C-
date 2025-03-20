@@ -18,7 +18,9 @@ void labelled_group_creation (std::vector<uint64_t> &buckets, u_int64_t R, u_int
 
     std::cout << "Bucket is this big " << buckets.size() << std::endl;
     std::cout << "N and R are " << N << "x" << R << std::endl;
-
+    
+    uint64_t group_size = N / B;
+    
     for (auto r = 0 ; r < R ; r++) {
         std::vector<std::vector<uint64_t>> iter_groups;
         std::vector<uint64_t> outcasts;
@@ -36,7 +38,6 @@ void labelled_group_creation (std::vector<uint64_t> &buckets, u_int64_t R, u_int
             // Shuffle the indices
             std::shuffle(cluster_indices.begin(), cluster_indices.end(), rng);
 
-            uint64_t group_size = N / B;
             uint64_t num_pure_groups = cluster_indices.size() / group_size;
 
             for (uint64_t i = 0; i < num_pure_groups; ++i) {
@@ -56,7 +57,6 @@ void labelled_group_creation (std::vector<uint64_t> &buckets, u_int64_t R, u_int
         std::shuffle(outcasts.begin(), outcasts.end(), rng);
 
         // Distribute outcasts into additional groups
-        uint64_t group_size = N / B;
         uint64_t num_extra_groups = outcasts.size() / group_size;
         
         for (uint64_t i = 0; i < num_extra_groups; ++i) {
@@ -72,9 +72,16 @@ void labelled_group_creation (std::vector<uint64_t> &buckets, u_int64_t R, u_int
                 if (point * R + r >= N * R) {
                     std::cout << "Mistah Homes\n";
                 }
-                buckets[point * R + r] = i;
+                buckets[point * R + r] = B * r + i;
             }
         }
+        
+        // #ifdef VISUALISE
+        // std::cout << "r=" << r << ": \n";
+        // for (int i = 0; i < B; i ++){
+        //   std::cout << buckets
+        // }
+        // #endif
     }
 }
 
@@ -90,7 +97,7 @@ class Flinng {
     
       // All the hashes for point 1 come first, etc.
       // Size of hashes should be multiple of num_hash_tables
-      void addPoints(std::vector<uint64_t> hashes, std::string group_formation_algorithm, std::vector<uint64_t> &training_labels) {
+      void addPoints(std::vector<uint64_t> hashes, std::string group_formation_algorithm, std::vector<uint64_t> &training_labels, std::string temp_dir) {
     
         uint64_t num_points = hashes.size() / num_hash_tables;
         std::vector<uint64_t> buckets(num_rows * num_points);   // A bucket maps which cells a single point will be part of. It consists of R such mappings per point.
@@ -103,7 +110,7 @@ class Flinng {
         else {
             throw std::runtime_error("Invalid group_formation_algorithm");
         }
-    
+        
         #pragma omp parallel for
         for (uint64_t table = 0; table < num_hash_tables; table++) {
           for (uint64_t point = 0; point < num_points; point++) {
@@ -124,6 +131,18 @@ class Flinng {
         }
     
         total_points_added += num_points;
+
+        #ifdef VISUALISE
+        std::ofstream index_file(temp_dir + "/cell_memberships.csv", std::ios::trunc);
+        if (!index_file) {
+            throw std::runtime_error("Cannot open cell_memberships CSV file");
+        }
+        index_file << "cell,size\n";
+        for (uint64_t i = 0; i < num_rows * cells_per_row; i++) {
+            index_file << i << "," << cell_membership[i].size() << "\n";
+        }
+        index_file.close();
+        #endif
     
         prepareForQueries();
       }
@@ -142,7 +161,7 @@ class Flinng {
       // Again all the hashes for point 1 come first, etc.
       // Size of hashes should be multiple of num_hash_tables
       // Results are similarly ordered
-      std::vector<uint64_t> query(std::vector<uint64_t> hashes, uint32_t top_k) {
+      std::vector<uint64_t> query(std::vector<uint64_t> hashes, uint32_t top_k, std::string temp_dir) {
         uint64_t num_queries = hashes.size() / num_hash_tables;
         std::vector<uint64_t> results(top_k * num_queries);
         
@@ -169,7 +188,7 @@ class Flinng {
           }
 
           #ifdef VISUALISE
-          std::ofstream counts_file("ancillary_stuff/counts.csv", std::ios::trunc);
+          std::ofstream counts_file(temp_dir + "/counts.csv", std::ios::trunc);
           if (!counts_file) {
               throw std::runtime_error("Cannot open counts CSV file");
           }
@@ -190,6 +209,17 @@ class Flinng {
             sorted[counts[i]].push_back(i);
           }
 
+          #ifdef VISUALISE
+          std::ofstream col_file(temp_dir + "/collisions.csv", std::ios::trunc);
+          if (!col_file) {
+              throw std::runtime_error("Cannot open collisions CSV file");
+          }
+          col_file << "num_collisions, freq\n";
+          for (uint32_t i = 0; i < num_hash_tables + 1; i++) {
+            col_file << i << "," << sorted[i].size() << "\n";
+          }
+          col_file.close();
+          #endif
           for (uint32_t i = 0; i < num_hash_tables + 1; ++i) {
             DEBUG_PRINT << "collisions = " << i << " : " << sorted[i].size() << std::endl;
           }
@@ -370,7 +400,7 @@ void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_
     std::cout << "Time for making hash values: " << elapsed_seconds.count() << "ms\n";
 
     // Adding the points to the FLINNG index
-    flinng.addPoints(hashes, group_formation_algorithm, training_labels);
+    flinng.addPoints(hashes, group_formation_algorithm, training_labels, temp_dir);
 
     std::cout << "FLINNG index created successfully\n";
 
@@ -411,7 +441,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #endif
 
     // Checking against all the masks
-    std::vector<uint64_t> reported_neighbours = flinng.query(query_hash_values, K);
+    std::vector<uint64_t> reported_neighbours = flinng.query(query_hash_values, K, temp_dir);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -448,6 +478,18 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
             naive_file << query_indices[i] << ",";
           #endif
           std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
+          #ifdef VISUALISE
+          std::vector<uint64_t> smallestDistances = ReportedNeighbours->smallestKDistances();
+          std::ofstream dist_file(temp_dir+"/distances.csv", std::ios::trunc);
+          if (!dist_file) {
+              throw std::runtime_error("Cannot open distances CSV file");
+          }
+          dist_file << "neighbour,distance\n";
+          for (auto i = 0; i < K; i++) {
+              dist_file << curr_golden_neighbours[i] << "," << smallestDistances[i] << "\n";
+          }
+          dist_file.close();
+          #endif
           for (auto j = 0; j < K; j++) {
               golden_neighbours[i * K + j] = curr_golden_neighbours[j];
               #ifdef DEBUG

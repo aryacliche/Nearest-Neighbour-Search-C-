@@ -47,4 +47,14 @@ class ProspectiveNeighbours {  // This linked list is good to use when we are lo
             }
             return topK;
         }
+
+        std::vector<size_t> smallestKDistances() {
+            std::vector<size_t> topK;
+            Node* current = worstNeighbour;
+            while (current != nullptr) {
+                topK.push_back(current->distance);
+                current = current->betterNeighbour;
+            }
+            return topK;
+        }
 };
