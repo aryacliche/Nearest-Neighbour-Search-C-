@@ -366,9 +366,8 @@ void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_
     flinng.save_to_disk(temp_dir);
 }
 
-double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::vector<VGGNetFeature> &queries, uint32_t K, int num_queries, int m, int l, double w, std::string temp_dir, Flinng &flinng, std::vector<VGGNetFeature> &training_features) {
+double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::vector<int> &query_indices, std::vector<VGGNetFeature> &val_features, uint32_t K, int num_queries, int m, int l, double w, std::string temp_dir, Flinng &flinng, std::vector<VGGNetFeature> &training_features) {
     std::vector<uint64_t> query_hash_values(num_queries * m);   // This stores the hash values of the query
-    
     auto start = std::chrono::high_resolution_clock::now();
     
     // Calculating hash values of the query
@@ -378,7 +377,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
         for (int j = 0; j < m; j++) {
             float dot_prod = std::inner_product(
                 vecs[j].begin(), vecs[j].end(),
-                queries[i].values.begin(),
+                val_features[query_indices[i]].values.begin(),
                 0.0f
             );
             DEBUG_PRINT << "Dot prod = " << dot_prod <<  ", t_vals[j] = " << t_vals[j] << ", w = " << w << ", l = " << l<< std::endl;
@@ -409,21 +408,48 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
 
     // Now in order to check the correctness of the reported neighbours, we will run naive search on this as well
     std::vector<uint64_t> golden_neighbours(num_queries * K);
+    
+    #ifdef DEBUG
+    std::ofstream naive_file(temp_dir + "/naive_neighbours_returned.csv", std::ios::trunc);
+    if (!naive_file) {
+        throw std::runtime_error("Cannot open queries CSV file");
+    }
+    naive_file << "query_index,";
+    for (auto i = 0 ; i < K; i++) {
+      naive_file << "naive_neighbour_" << i << ",";
+    }
+    naive_file << "\n";
+    #endif
     start = std::chrono::high_resolution_clock::now();
+
     #pragma omp parallel for shared(golden_neighbours)
     for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
         for (auto j = 0; j < training_features.size(); j++) {
-            double distance = euclideanDistance(queries[i].values, training_features[j].values);
+            double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[j].values);
             ReportedNeighbours->checkAndInsert(j, distance);
         }
-    
-        std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
-        for (auto j = 0; j < K; j++) {
-            golden_neighbours[i * K + j] = curr_golden_neighbours[j];
+        #pragma omp critical
+        {        
+          #ifdef DEBUG
+            naive_file << query_indices[i] << ",";
+          #endif
+          std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
+          for (auto j = 0; j < K; j++) {
+              golden_neighbours[i * K + j] = curr_golden_neighbours[j];
+              #ifdef DEBUG
+              naive_file << curr_golden_neighbours[j] << ",";
+              #endif
+          }
+          #ifdef DEBUG
+          naive_file << '\n';
+          #endif
         }
     }
+    #ifdef DEBUG
+    naive_file.close();
+    #endif
     end = std::chrono::high_resolution_clock::now();
     auto naive_elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Naive Search took : " << naive_elapsed_seconds.count() << "ms\n";
@@ -444,7 +470,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
         }
         DEBUG_PRINT << std::endl;
     }
-    #endif
+    #endif  
 
     // Computing the precision and recall of reported_neighbours wrt golden_neighbours
     // Write precision, recall into a CSV file

@@ -120,13 +120,16 @@ int main(int argc, char const *argv[]){
     csv_file.close();
 
     int num_queries = 100;
-    std::vector<VGGNetFeature> queries;
-    queries.reserve(num_queries);
+    std::vector<int> query_indices;
+    query_indices.reserve(num_queries);
+
     for (auto i = 0; i < num_queries; i++) {
-        queries.push_back(val_features[std::rand() % val_features.size()]);
+        query_indices.push_back(rand() % val_features.size());
     }
-    DEBUG_PRINT << "Size of queries = " << queries.size() << "\n";
-    double running_total_time = evaluateQuery(vecs, t_vals, queries, K, num_queries, m, l, w, temp_dir, flinng, training_features);
+    
+    // We run the online querying phase
+    double running_total_time = evaluateQuery(vecs, t_vals, query_indices, val_features, K, num_queries, m, l, w, temp_dir, flinng, training_features);
+    
     std::cout << "Average time: " << running_total_time / num_queries << "ms\n";
     std::cout << "Done" << std::endl;
 }   

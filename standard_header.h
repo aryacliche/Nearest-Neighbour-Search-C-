@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <limits>
 #include <vector>
 #include <array>
 #include <stdexcept>
@@ -22,9 +23,9 @@
 #endif
 
 #ifdef SHOW
-    #define DEEPER_DETAILS std::cerr
+    #define SHOW_ON_TERMINAL std::cerr
 #else
-    #define DEEPER_DETAILS if (false) std::cerr
+    #define SHOW_ON_TERMINAL if (false) std::cerr
 #endif
 
 struct VGGNetFeature {
