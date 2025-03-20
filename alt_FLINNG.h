@@ -167,6 +167,18 @@ class Flinng {
               ++counts[inverted_flinng_index[index][small_index]];
             }
           }
+
+          #ifdef VISUALISE
+          std::ofstream counts_file("ancillary_stuff/counts.csv", std::ios::trunc);
+          if (!counts_file) {
+              throw std::runtime_error("Cannot open counts CSV file");
+          }
+          counts_file << "row,cell,count\n";
+          for (uint32_t i = 0; i < num_rows * cells_per_row; i++) {
+              counts_file << i / cells_per_row << "," << i % cells_per_row << "," << counts[i] << "\n";
+          }
+          counts_file.close();
+          #endif
     
           std::vector<uint32_t> sorted[num_hash_tables + 1];
           uint32_t size_guess = num_rows * cells_per_row / (num_hash_tables + 1);

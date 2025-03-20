@@ -22,12 +22,6 @@
     #define DEBUG_PRINT if (false) std::cout
 #endif
 
-#ifdef SHOW
-    #define SHOW_ON_TERMINAL std::cerr
-#else
-    #define SHOW_ON_TERMINAL if (false) std::cerr
-#endif
-
 struct VGGNetFeature {
     std::array<float, FEATURE_SIZE> values; // We know that each of the features is compuslorily 4096 dimensional   
 };
