@@ -131,18 +131,6 @@ class Flinng {
         }
     
         total_points_added += num_points;
-
-        #ifdef VISUALISE
-        std::ofstream index_file(temp_dir + "/cell_memberships.csv", std::ios::trunc);
-        if (!index_file) {
-            throw std::runtime_error("Cannot open cell_memberships CSV file");
-        }
-        index_file << "cell,size\n";
-        for (uint64_t i = 0; i < num_rows * cells_per_row; i++) {
-            index_file << i << "," << cell_membership[i].size() << "\n";
-        }
-        index_file.close();
-        #endif
     
         prepareForQueries();
       }

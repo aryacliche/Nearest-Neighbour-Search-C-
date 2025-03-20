@@ -7,7 +7,7 @@ def main():
     dataset = sys.argv[1]
     algo = sys.argv[2]
 
-    working_dir = f'../alt_temp/{dataset}/{algo}'
+    working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{algo}'
     counts_df = pd.read_csv(f'{working_dir}/counts.csv')
     
     R = np.max(counts_df['row'] + 1)
@@ -31,23 +31,7 @@ def main():
     plt.title('Counts')
     plt.xlabel('Cell')
     plt.ylabel('Row')
-    plt.savefig('counts.png')
-
-    groups_df = pd.read_csv(f'{working_dir}/cell_memberships.csv')
-    groups = np.zeros((R,B))
-    for index, row in groups_df.iterrows():
-        r = row['cell'] / R
-        b = row['cell'] % R
-        
-        groups[r][b] = row['size']
-
-    plt.figure(figsize=(100, 100))
-    plt.imshow(groups, cmap='viridis', interpolation=None)
-    plt.colorbar()
-    plt.title('Groups')
-    plt.xlabel('Cell')
-    plt.ylabel('Row')
-    plt.savefig('groups.png')
+    plt.savefig(f'{working_dir}/counts.png')
 
 if __name__=="__main__":
     main()
