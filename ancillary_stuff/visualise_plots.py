@@ -11,8 +11,8 @@ def count_diags(working_dir, file):
     R = np.max(counts_df['row'] + 1)
     B = np.max(counts_df['cell'] + 1)
 
-    print('Number of rows:', R)
-    print('Number of cells:', B)
+    # print('Number of rows:', R)
+    # print('Number of cells:', B)
 
     counts = np.zeros((R, B))
     for index, row in counts_df.iterrows():

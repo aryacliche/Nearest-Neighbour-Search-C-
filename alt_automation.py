@@ -6,10 +6,15 @@ from plotter import single_use
 
 def main():
     mode = sys.argv[1]
+    dataset_mode = sys.argv[2]
+    if dataset_mode == None:
+        dataset_range = ['imagenet', 'mirflickr']
+    else:
+        dataset_range = [dataset_mode]
     
     w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     json_file_path = 'config.json'
-    for r in range(20, 10, -3):
+    for r in range(14, 1, -3):
         for w in w_range:
             with open(json_file_path, 'r') as file:
                 data = json.load(file)
@@ -20,7 +25,7 @@ def main():
             with open(json_file_path, 'w') as file:
                 json.dump(data, file, indent=4)
 
-            for dataset in ['imagenet', 'mirflickr']:
+            for dataset in dataset_range:
                 for group_formation in ['random', 'labelled']:
                     print(f"Running for {dataset} and {group_formation}")
                     subprocess.run(['./alt_run_FLINNG.sh', f'{mode}', f'{dataset}', f'{group_formation}', f'{r}'])
