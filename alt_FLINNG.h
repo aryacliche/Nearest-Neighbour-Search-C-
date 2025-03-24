@@ -194,7 +194,7 @@ class Flinng {
           if (!col_file) {
               throw std::runtime_error("Cannot open collisions CSV file");
           }
-          col_file << "num_collisions, freq\n";
+          col_file << "num_collisions,freq\n";
           for (uint32_t i = 0; i < num_hash_tables + 1; i++) {
             col_file << i << "," << sorted[i].size() << "\n";
           }
