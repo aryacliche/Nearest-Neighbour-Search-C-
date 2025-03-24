@@ -1,10 +1,10 @@
 #!/bin/bash
-
-dataset=$1
-group_creation_algorithm=$2
-R=${3:-3}
-N_force=${4:--1}
-temp_name=${5:-alt_temp}
+mode=$1
+dataset=$2
+group_creation_algorithm=$3
+R=${4:-3}
+N_force=${5:--1}
+temp_name=${6:-alt_temp}
 temp_dir="${temp_name}/${dataset}/${group_creation_algorithm}"
 
 if [ ! -d "${temp_dir}" ]; then
@@ -26,5 +26,7 @@ fi
 echo "./alt.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
 ./alt.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
 
-echo "python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}"
-python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}
+if [ "${mode}" == "visualise" ]; then
+    echo "python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}"
+    python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}
+fi

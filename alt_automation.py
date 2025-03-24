@@ -1,11 +1,15 @@
 import json
 import subprocess
 import os
+import sys
+from plotter import single_use
 
 def main():
-    w_range = [0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0]
+    mode = sys.argv[1]
+    
+    w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     json_file_path = 'config.json'
-    for r in range(3, 1, -1):
+    for r in range(20, 10, -3):
         for w in w_range:
             with open(json_file_path, 'r') as file:
                 data = json.load(file)
@@ -18,17 +22,30 @@ def main():
 
             for dataset in ['imagenet', 'mirflickr']:
                 for group_formation in ['random', 'labelled']:
-                    subprocess.run(['./alt_run_FLINNG.sh' ,f'{dataset}' ,f'{group_formation}', f'{r}'])
-                    try:
-                        src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{group_formation}/'
-                        dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history/{dataset}/{group_formation}/'
-                        os.makedirs(dest_dir, exist_ok=True)
-                        for filename in ['counts.csv', 'collisions.csv', 'distances.csv', 'counts.png', 'results.csv', 'log.out']:
-                            src_file = os.path.join(src_dir, filename)
-                            dest_file = os.path.join(dest_dir, f'{r}_{w}_{filename}')
-                            os.rename(src_file, dest_file)
-                    except Exception as e:
-                        print(f"An error occurred: {e}")
+                    print(f"Running for {dataset} and {group_formation}")
+                    subprocess.run(['./alt_run_FLINNG.sh', f'{mode}', f'{dataset}', f'{group_formation}', f'{r}'])
+                    if mode == 'visualise':        
+                        try:
+                            src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{group_formation}/'
+                            dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history/{dataset}/{group_formation}/'
+                            os.makedirs(dest_dir, exist_ok=True)
+                            collision_files = [f for f in os.listdir(src_dir) if 'collisions' in f] # This contains both csv and png files
+                            distance_files = [f for f in os.listdir(src_dir) if 'distances' in f]
+                            counts_files = [f for f in os.listdir(src_dir) if 'counts' in f] # This contains both csv and png files
+                            total_files = ['results.csv', 'log.out']
+                            total_files.extend(distance_files)
+                            total_files.extend(counts_files)
+                            total_files.extend(collision_files)
+                            for filename in total_files:
+                                src_file = os.path.join(src_dir, filename)
+                                dest_file = os.path.join(dest_dir, f'{r}_{w}_{filename}')
+                                os.rename(src_file, dest_file)
+
+                            # Now we will plot the precision vs recall for all of the graphs
+                            print(f"Printing precision vs recall graphs")
+                            single_use(dest_dir, r, "graphs", savefig_name = f"{dest_dir}/{r}_{w}_precision_vs_recall.png", csv_file = f"{dest_dir}/{r}_{w}_results.csv", title_info = f"R = {r}, w= {w}")
+                        except Exception as e:
+                            print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

@@ -116,7 +116,7 @@ int main(int argc, char const *argv[]){
     if (!csv_file) {
         throw std::runtime_error("Cannot open results CSV file");
     }
-    csv_file << "precision" << "," << "recall" << "," << "running_time" "\n";
+    csv_file << "precision" << "," << "recall" << "," << "flinng_running_time" << "," <<  "naive_running_time\n";
     csv_file.close();
 
     int num_queries = 100;

@@ -16,7 +16,7 @@ void labelled_group_creation (std::vector<uint64_t> &buckets, u_int64_t R, u_int
     unique_clusters.erase(std::unique(unique_clusters.begin(), unique_clusters.end()), unique_clusters.end());
     std::mt19937 rng(std::time(nullptr));
 
-    std::cout << "Bucket is this big " << buckets.size() << std::endl;
+    std::cout << "Buckets has these many elements : " << buckets.size() << std::endl;
     std::cout << "N and R are " << N << "x" << R << std::endl;
     
     uint64_t group_size = N / B;
@@ -75,13 +75,6 @@ void labelled_group_creation (std::vector<uint64_t> &buckets, u_int64_t R, u_int
                 buckets[point * R + r] = B * r + i;
             }
         }
-        
-        // #ifdef VISUALISE
-        // std::cout << "r=" << r << ": \n";
-        // for (int i = 0; i < B; i ++){
-        //   std::cout << buckets
-        // }
-        // #endif
     }
 }
 
@@ -160,7 +153,6 @@ class Flinng {
         std::cout << "                = " << results.size() << std::endl;
         #endif
     
-        // #pragma omp parallel for
         for (uint32_t query_id = 0; query_id < num_queries; query_id++) {
     
           std::vector<uint32_t> counts(num_rows * cells_per_row, 0);
@@ -176,7 +168,7 @@ class Flinng {
           }
 
           #ifdef VISUALISE
-          std::ofstream counts_file(temp_dir + "/counts.csv", std::ios::trunc);
+          std::ofstream counts_file(temp_dir + "/counts_"+std::to_string(query_id)+".csv", std::ios::trunc);
           if (!counts_file) {
               throw std::runtime_error("Cannot open counts CSV file");
           }
@@ -198,7 +190,7 @@ class Flinng {
           }
 
           #ifdef VISUALISE
-          std::ofstream col_file(temp_dir + "/collisions.csv", std::ios::trunc);
+          std::ofstream col_file(temp_dir + "/collisions_"+std::to_string(query_id)+".csv", std::ios::trunc);
           if (!col_file) {
               throw std::runtime_error("Cannot open collisions CSV file");
           }
@@ -402,7 +394,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     
     // Calculating hash values of the query
     DEBUG_PRINT << "query_hash_values: \n";
-    // #pragma omp parallel for
+    
     for (auto i = 0; i < num_queries; i++) {
         for (int j = 0; j < m; j++) {
             float dot_prod = std::inner_product(
@@ -452,7 +444,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #endif
     start = std::chrono::high_resolution_clock::now();
 
-    #pragma omp parallel for shared(golden_neighbours)
+    // #pragma omp parallel for shared(golden_neighbours) // For now we want to only output the serialised values of nearest neighbour computation
     for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
@@ -468,7 +460,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
           std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
           #ifdef VISUALISE
           std::vector<uint64_t> smallestDistances = ReportedNeighbours->smallestKDistances();
-          std::ofstream dist_file(temp_dir+"/distances.csv", std::ios::trunc);
+          std::ofstream dist_file(temp_dir+"/distances_"+std::to_string(i)+".csv", std::ios::trunc);
           if (!dist_file) {
               throw std::runtime_error("Cannot open distances CSV file");
           }
@@ -542,7 +534,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
         throw std::runtime_error("Cannot open results CSV file");
     }
     for (auto i =0; i < num_queries; i ++) {
-        csv_file << precision[i] << "," << recall[i] << "," << double(elapsed_seconds.count()) << "\n";
+        csv_file << precision[i] << "," << recall[i] << "," << double(elapsed_seconds.count()) << "," << double(naive_elapsed_seconds.count()) << "\n";
     }
     csv_file.close();
 
