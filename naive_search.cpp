@@ -1,5 +1,6 @@
 #include "standard_header.h"
 #include "naive_search.h"
+#include "omp.h"
 
 /*
     Deprecated code : This function is not needed anymore
@@ -44,6 +45,13 @@ int main(int argc, char const *argv[])
 	std::vector<size_t> training_indices(training_features.size());
 	std::iota(training_indices.begin(), training_indices.end(), 0);    // Fills it with 0, 1, 2, ....
 
+    #ifdef VISUALISE_DISTANCES
+    int num_threads = 24;
+    omp_set_num_threads(num_threads);
+    std::ofstream csv_file("ancillary_stuff/distances.csv", std::ios::trunc);
+    csv_file << "Index1,Index2,Distance\n";
+    #endif
+
 	std::srand(std::time(nullptr)); // use current time as seed for random generator
     
     auto running_total_time = 0.0;
@@ -63,9 +71,17 @@ int main(int argc, char const *argv[])
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
 
         start = std::chrono::high_resolution_clock::now();
-        
+        #ifdef VISUALISE_DISTANCES
+        #pragma omp parallel for
+        #endif
         for (auto i = 0; i < N; i++) {
             double distance = euclideanDistance(random_query.values, training_features[i].values);
+            #ifdef VISUALISE_DISTANCES
+            #pragma omp critical
+            {
+                csv_file << random_index << "," << i << "," << distance << "\n";
+            }
+            #endif
             ReportedNeighbours->checkAndInsert(i, distance);
         }
 
@@ -78,4 +94,8 @@ int main(int argc, char const *argv[])
     }
     std::cout << "Average time: " << running_total_time / 100.0 << "s\n";
     std::cout << "Done" << std::endl;
+
+    #ifdef VISUALISE_DISTANCES
+    csv_file.close();
+    #endif
 }

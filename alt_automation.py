@@ -9,12 +9,16 @@ def main():
     dataset_mode = sys.argv[2]
     if dataset_mode == None:
         dataset_range = ['imagenet', 'mirflickr']
+        w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     else:
         dataset_range = [dataset_mode]
+        if dataset_mode == 'imagenet':
+            w_range = [1.0, 5.0, 10.0, 30.0, 50.0]
+        else:
+            w_range = [0.05, 0.1, 0.3, 0.5, 1.0]
     
-    w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     json_file_path = 'config.json'
-    for r in range(14, 1, -3):
+    for r in range(20, 1, -3):
         for w in w_range:
             with open(json_file_path, 'r') as file:
                 data = json.load(file)
@@ -32,7 +36,7 @@ def main():
                     if mode == 'visualise':        
                         try:
                             src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{group_formation}/'
-                            dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history/{dataset}/{group_formation}/'
+                            dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history_800/{dataset}/{group_formation}/'
                             os.makedirs(dest_dir, exist_ok=True)
                             collision_files = [f for f in os.listdir(src_dir) if 'collisions' in f] # This contains both csv and png files
                             distance_files = [f for f in os.listdir(src_dir) if 'distances' in f]
