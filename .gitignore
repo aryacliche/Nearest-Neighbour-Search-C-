@@ -1,13 +1,13 @@
 data/
 history/
-history_400/
-history_800/
+history*/
 FLINNG/
 temp/
 alt_temp/
 ancillary_stuff/testing_LSH_results/
 ancillary_stuff/*.csv
 ancillary_stuff/label_efficacy_graphs/
+ancillary_stuff/cluster-1.59/
 .vscode/
 *.out
 *.gch

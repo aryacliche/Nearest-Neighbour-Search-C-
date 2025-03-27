@@ -444,7 +444,9 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #endif
     start = std::chrono::high_resolution_clock::now();
 
-    // #pragma omp parallel for shared(golden_neighbours) // For now we want to only output the serialised values of nearest neighbour computation
+    #ifdef VISUALISE
+    #pragma omp parallel for shared(golden_neighbours) // For now we want to only output the serialised values of nearest neighbour computation
+    #endif
     for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
@@ -452,6 +454,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
             double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[j].values);
             ReportedNeighbours->checkAndInsert(j, distance);
         }
+
         #pragma omp critical
         {        
           #ifdef DEBUG
