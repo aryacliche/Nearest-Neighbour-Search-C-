@@ -36,7 +36,7 @@ def main():
                     if mode == 'visualise':        
                         try:
                             src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{group_formation}/'
-                            dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history_4096/{dataset}/{group_formation}/'
+                            dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history_4096_clus/{dataset}/{group_formation}/'
                             os.makedirs(dest_dir, exist_ok=True)
                             collision_files = [f for f in os.listdir(src_dir) if 'collisions' in f] # This contains both csv and png files
                             distance_files = [f for f in os.listdir(src_dir) if 'distances' in f]

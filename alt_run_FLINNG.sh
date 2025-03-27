@@ -23,7 +23,7 @@ else
     exit 1
 fi
 
-echo "./alt.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
+echo "./alt.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_clustered_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
 ./alt.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
 
 if [ "${mode}" == "visualise" ]; then
