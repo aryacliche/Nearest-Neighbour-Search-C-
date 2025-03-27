@@ -324,7 +324,7 @@ class Flinng {
       std::vector<std::vector<uint64_t>> cell_membership;
 };
 
-void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::string temp_dir, std::vector<VGGNetFeature> &training_features, std::vector<uint64_t> &training_labels, std::string &group_formation_algorithm, int N, int m, int d, int l, double w, Flinng &flinng) {        
+void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::string temp_dir, std::vector<VGGNetFeature> &training_features, std::vector<uint64_t> &training_labels, std::string &group_formation_algorithm, uint64_t N, uint64_t m, int d, int l, double w, Flinng &flinng) {        
     // Generating and saving the vecs mask_file
     std::default_random_engine generator(std::time(nullptr));
     std::normal_distribution<float> distribution(0.0, 1.0);
@@ -361,6 +361,7 @@ void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_
     std::cout << "LSH functions initialised and saved successfully\n";
 
     //// Creating hash values
+    std::cout << "Allocating hashes of size " << m * N << std::endl;
     std::vector<uint64_t> hashes(m * N);
     auto start = std::chrono::high_resolution_clock::now();
     #pragma omp parallel for

@@ -41,7 +41,7 @@ int main(int argc, char const *argv[]){
     elapsed_seconds = end - start;
     std::cout << "Time for loading validation dataset: " << elapsed_seconds.count() << "s\n";
 
-    int N = (forced_N != -1) ? std::min(forced_N, int(training_features.size())) : training_features.size();
+    uint64_t N = (forced_N != -1) ? std::min(forced_N, int(training_features.size())) : training_features.size();
     int B = 2 * int(sqrt(N));
     N = N - N % B;
     training_features.resize(N);    // We only keep the first N features of the training set
@@ -54,10 +54,10 @@ int main(int argc, char const *argv[]){
     nlohmann::json config;
     config_file >> config;
     config_file.close();
-    int d = 4096;
+    int d = FEATURE_SIZE;
     int R = config["R"];
     int t = config["t"];
-    int m = config["m"];
+    uint64_t m = config["m"];
     int L = config["L"];
     double w = config["w"];
     

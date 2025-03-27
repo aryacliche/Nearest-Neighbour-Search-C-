@@ -4,10 +4,10 @@
 #include <vector>
 #include <array>
 #include <stdexcept>
-#include <cstdlib> // for std::rand and std::srand
-#include <ctime>   // for std::time
+#include <cstdlib>      // for std::rand and std::srand
+#include <ctime>        // for std::time
+#include <algorithm>    // for std::copy, std::sort
 #include <cmath>
-#include <algorithm> // For std::copy, std::sort
 #include <numeric>
 #include <random>   
 #include <chrono>
@@ -95,4 +95,14 @@ std::vector<uint64_t> readLabelsAsInt(const std::string filename) {
     std::transform(labels.begin(), labels.end(), int_labels.begin(),
                    [&label_to_int](const std::string& label) { return label_to_int[label]; });
     return int_labels;
+}
+
+void dataMatrixFromVGGNETFeatures (std::vector<VGGNetFeature> features, double** data) {
+    auto size = features.size();
+    for (int i = 0; i < size; i++) {
+        data[i] = new double[FEATURE_SIZE];
+        for (int j = 0; j < FEATURE_SIZE; j++) {
+            data[i][j] = features[i].values[j];
+        }
+    }
 }

@@ -17,5 +17,6 @@ This version basically frankensteins the entirety of Engel's original code.
 
 # References
 1. `psdLsh.h` is taken from [MyLSHBox](https://github.com/IenLong/MyLSHBOX). It implements the p-stable distribution LSH function which was described by [Locality-Sensitive Hashing Scheme Based on p-Stable Distributions](https://dl.acm.org/doi/pdf/10.1145/997817.997857) to work with $l_p$ norm spaces. (**Not used anymore**)
-2. `ancillary_stuff/json.hpp` is a clone of `nlohmann/json.hpp` which is a [popular C++ library](https://github.com/nlohmann/json/tree/develop) for working easily with JSON files. I used JSON files to store and validate configuations.
+2. `ancillary_stuff/json.hpp` is a clone of `nlohmann/json.hpp` which is a [popular C++ library](https://github.com/nlohmannThe/json/tree/develop) for working easily with JSON files. I used JSON files to store and validate configuations.
 3. [Knowing when not to use the STL algorithms - set operations](https://cukic.co/2018/06/03/set-intersection-in-cxx/) is a good resource for solving the set intersection problem more efficiently than sorting and using `set::intersection`.
+4. For clustering, we are using [C Open Source Clustering Software](http://bonsai.hgc.jp/~mdehoon/software/cluster/). Code from `src` of that repo has been copied to `ancillary_stuff` for use. There are some errors which it incompatible with the g++ compiler thus these edits were required.
