@@ -27,6 +27,11 @@ def get_numeric_labels(labels):
 
 def main():
     dataset = sys.argv[1]
+    training_label_txt = None
+    distances_filepath = sys.argv[2]
+    if len(sys.argv) == 4:
+        training_label_txt = sys.argv[3]
+        
     if dataset == "mirflickr":
         folder_name = "/hard-disk-2/users/aryavishe/VGGNET_features_MIRFLICKR_partitioned"
     elif dataset == "imagenet":
@@ -35,12 +40,16 @@ def main():
         print("Invalid dataset")
         exit(1)
     
-    distances_filepath = sys.argv[2]
 
     print("Reading the training repo")
     train_labels = []
     get_features(f"{folder_name}/train", [], train_labels)
-    train_labels = get_numeric_labels(train_labels)
+
+    if training_label_txt is not None: # We should use a different file for the labels
+        with open(training_label_txt, 'r') as file:
+            train_labels = [int(line.strip()) for line in file.readlines()]
+    else:
+        train_labels = get_numeric_labels(train_labels)
 
     print("Reading the validation repo")
     val_labels = []
@@ -51,6 +60,8 @@ def main():
     distances_df = pd.read_csv(distances_filepath)
 
     unique_queries = distances_df['Index1'].unique()
+
+    distances_df = distances_df[(distances_df['Index1'] < len(val_labels)) & (distances_df['Index2'] < len(train_labels))]
 
     for query_id in unique_queries:
         original_label = val_labels[query_id]
@@ -65,7 +76,10 @@ def main():
         plt.xlabel("Training image index")
         plt.ylabel("Distance")
         plt.title(f"Distances from query {query_id} (label = {original_label}) to all training images")
-        plt.savefig(f"label_efficacy_graphs/distances_{dataset}_{query_id}.png")
+        if training_label_txt is not None:
+            plt.savefig(f"label_efficacy_graphs/distances_{dataset}_clustered_{query_id}.png")
+        else:
+            plt.savefig(f"label_efficacy_graphs/distances_{dataset}_{query_id}.png")
         plt.close()
 
 
