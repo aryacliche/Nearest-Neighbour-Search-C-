@@ -81,7 +81,13 @@ int main(int argc, char const *argv[])
     kcluster(num_clusters, N, d, data, mask, weight, 0, 5, 'a', 'e', clusterid, error, &ifound);
 
     // We will now just print the clusterid
-    std::ofstream outfile(data_folder_name + "/clustered_labels.txt");
+    std::string output_filename = train_filename;
+    size_t pos = output_filename.find("features.bin");
+    if (pos != std::string::npos) {
+        output_filename.replace(pos, std::string("features.bin").length(), "clustered_labels.txt");
+    }
+
+    std::ofstream outfile(output_filename);
     if (!outfile) {
         std::cerr << "Error: Could not open file for writing cluster IDs." << std::endl;
         return 1;
@@ -90,9 +96,9 @@ int main(int argc, char const *argv[])
     for (uint64_t i = 0; i < N; ++i) {
         outfile << clusterid[i] << std::endl;
     }
-
     outfile.close();
-    std::cout << "Cluster IDs have been written to " << data_folder_name + "/clustered_labels.txt" << std::endl;
+
+    std::cout << "Cluster IDs have been written to " << output_filename << std::endl;
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;

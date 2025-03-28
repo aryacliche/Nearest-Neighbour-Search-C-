@@ -2476,7 +2476,7 @@ kmeans(int nclusters, int nrows, int ncolumns, double** data, int** mask,
             
             
             std::cout << "Single iteration of EM" << std::endl;
-            #pragma omp parallel for private(i, j, k)
+            #pragma omp parallel for private(i, j, k)   
             for (i = 0; i < nelements; i++) {
                 double distance;
                 /* Calculate the distances */
