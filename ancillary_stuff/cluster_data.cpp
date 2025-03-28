@@ -21,6 +21,9 @@ int main(int argc, char const *argv[])
     if (argc >= 6) {
         forced_N = std::stoi(argv[6]);
     }
+    int num_threads = 24;
+    omp_set_num_threads(num_threads);
+    std::cout << "Number of threads: " << num_threads << std::endl;
 
     // Load the training dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
     auto start = std::chrono::high_resolution_clock::now();

@@ -28,6 +28,7 @@
 
 #include "../standard_header.h"
 #include "cluster.h"
+#include "omp.h"
 
 /* ************************************************************************ */
 
@@ -2472,7 +2473,10 @@ kmeans(int nclusters, int nrows, int ncolumns, double** data, int** mask,
             /* Find the center */
             getclustermeans(nclusters, nrows, ncolumns, data, mask, tclusterid,
                             cdata, cmask, transpose);
-
+            
+            
+            std::cout << "Single iteration of EM" << std::endl;
+            #pragma omp parallel for private(i, j, k)
             for (i = 0; i < nelements; i++) {
                 double distance;
                 /* Calculate the distances */
