@@ -24,10 +24,11 @@ int main(int argc, char const *argv[])
     int num_threads = 24;
     omp_set_num_threads(num_threads);
     std::cout << "Number of threads: " << num_threads << std::endl;
+    int d; 
 
     // Load the training dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
     auto start = std::chrono::high_resolution_clock::now();
-    std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_filename);
+    std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_filename, d);
 	auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
@@ -37,15 +38,16 @@ int main(int argc, char const *argv[])
 
 	// Load the validation dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
 	start = std::chrono::high_resolution_clock::now();
-    std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_filename);
+    std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_filename, d);
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
     std::cout << "Time for loading validation dataset: " << elapsed_seconds.count() << "s\n";
 
     // Let us now convert the std::vector<VGGNETFeature> to an appropriately sized array
     uint64_t B = 2 * int(sqrt(N));
+    std::cout << "B = " << B << std::endl;
+    std::cout << "N = " << N << std::endl;
     N = N - N % B; // We want to ensure that there is a 
-    const int d = FEATURE_SIZE;
     double** data = new double*[N];
     for (uint64_t i = 0; i < N; ++i) {
         data[i] = new double[d];

@@ -1,4 +1,4 @@
-#include "alt_FLINNG.h"
+#include "FLINNG.h"
 
 int main(int argc, char const *argv[]){
     // Taking in inputs
@@ -9,6 +9,7 @@ int main(int argc, char const *argv[]){
     const std::string temp_dir = argv[5];   //"temp";
     std::string group_creation_algorithm = argv[6]; // "random" or "labelled"
     int forced_N = -1;
+    int d;
     if (argc == 8) {
         forced_N = std::stoi(argv[7]);
     }
@@ -27,7 +28,7 @@ int main(int argc, char const *argv[]){
 
 	// Estimate the size of the training dataset
     auto start = std::chrono::high_resolution_clock::now();
-    std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_features_file_name);
+    std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_features_file_name, d);
     std::vector<uint64_t> training_labels = readLabelsAsInt(train_labels_file_name);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
@@ -35,7 +36,7 @@ int main(int argc, char const *argv[]){
 
     // Load the validation dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
 	start = std::chrono::high_resolution_clock::now();
-    std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_features_file_name);
+    std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_features_file_name, d);
     std::vector<uint64_t> val_labels = readLabelsAsInt(val_labels_file_name);
     end = std::chrono::high_resolution_clock::now();
     elapsed_seconds = end - start;
@@ -54,7 +55,6 @@ int main(int argc, char const *argv[]){
     nlohmann::json config;
     config_file >> config;
     config_file.close();
-    int d = FEATURE_SIZE;
     int R = config["R"];
     int t = config["t"];
     uint64_t m = config["m"];

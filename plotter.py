@@ -59,7 +59,7 @@ def batch_type(dataset, algorithm, folder_name):
         temp_dir = None
         R = csv_file.split('_')[0]
         w = csv_file.split('_')[1]
-        graph_dir = 'alt_graphs'
+        graph_dir = 'graphs'
         savefig_name = os.path.join(graph_dir, f'{dataset}_{algorithm}_{csv_file}'.replace('csv', 'png'))
         csv_file_path = os.path.join(folder_name, csv_file)
         title_info = f'R={R}, w={w}'

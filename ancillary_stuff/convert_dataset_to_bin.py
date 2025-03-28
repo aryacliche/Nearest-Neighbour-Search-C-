@@ -3,7 +3,7 @@ import sys
 import struct
 import os
 
-def convert_features_to_bin(folder_path, output_name):
+def convert_features_to_bin(folder_path, output_name, feature_dim):
     # List all the files and folders in the current folder
     features = []
     labels = []
@@ -19,7 +19,6 @@ def convert_features_to_bin(folder_path, output_name):
             labels.append(category)
     
     num_points = len(features)
-    feature_dim = 4096
 
     with open(f'{output_name}_features.bin', 'wb') as f:
         # Write header
@@ -36,7 +35,8 @@ def convert_features_to_bin(folder_path, output_name):
 def main():
     folder_path = sys.argv[1] # Should point to the folder containing the features
     output_name = sys.argv[2] # Name of the output file
-    convert_features_to_bin(folder_path, output_name)
+    feature_dim = int(sys.argv[3])
+    convert_features_to_bin(folder_path, output_name, feature_dim)
 
 if __name__ == '__main__':
     main()

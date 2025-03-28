@@ -32,10 +32,10 @@ def main():
             for dataset in dataset_range:
                 for group_formation in ['labelled']:
                     print(f"Running for {dataset} and {group_formation}")
-                    subprocess.run(['./alt_run_FLINNG.sh', f'{mode}', f'{dataset}', f'{group_formation}', f'{r}'])
+                    subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{group_formation}', f'{r}'])
                     if mode == 'visualise':        
                         try:
-                            src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{group_formation}/'
+                            src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{dataset}/{group_formation}/'
                             dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history_400_clus/{dataset}/{group_formation}/'
                             os.makedirs(dest_dir, exist_ok=True)
                             collision_files = [f for f in os.listdir(src_dir) if 'collisions' in f] # This contains both csv and png files

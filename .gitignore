@@ -3,7 +3,6 @@ history/
 history*/
 FLINNG/
 temp/
-alt_temp/
 ancillary_stuff/testing_LSH_results/
 ancillary_stuff/*.csv
 ancillary_stuff/label_efficacy_graphs/

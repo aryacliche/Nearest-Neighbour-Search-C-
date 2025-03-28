@@ -8,11 +8,11 @@ Note that we have used a cosine-based distance measure. Projections on random hy
 3. With FLINGG, we will first write the code for making masks with the random group formation algorithm. Since we are dealing with really large datasets with not-so-big values of `L`, we should opt for a normal bit-map.
 4. For the LSH function, I am using p-stable Distribution LSH functions. It was tested for correctness using `testing_LSH_quality.py`
 
-## FLINGG.cpp
+## FLINGG.cpp (deprecated)
 This is going to be initially modelled the way we wrote the FLINGG python code. I am not sure what can be changed about it. Note that we are going allow Python to do all of the pre-processing of the dataset (since that is much easier anyways.) 
 - We will ensure that the things that will be timed (i.e. creation of structures and querying) is implemented purely in C++.
 
-## alt_FLINNG.cpp
+## FLINNG.cpp (original named alt_FLINNG.cpp)
 This version basically frankensteins the entirety of Engel's original code.
 
 # References
