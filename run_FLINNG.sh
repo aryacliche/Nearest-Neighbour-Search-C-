@@ -23,8 +23,13 @@ else
     exit 1
 fi
 
-echo "./a.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_clustered_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
-./a.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_clustered_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
+if [ "${group_creation_algorithm}" == "clustered" ]; then
+    echo "./a.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_clustered_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
+    ./a.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_clustered_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
+else
+    echo "./a.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
+    ./a.out "${train_suffix}_features.bin" "${val_suffix}_features.bin" "${train_suffix}_labels.txt" "${val_suffix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
+fi
 
 if [ "${mode}" == "visualise" ]; then
     echo "python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}"

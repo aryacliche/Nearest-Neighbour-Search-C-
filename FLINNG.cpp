@@ -26,7 +26,7 @@ int main(int argc, char const *argv[]){
         std::cout << "OpenMP is NOT enabled!" << std::endl;
     #endif
 
-	// Estimate the size of the training dataset
+    // Estimate the size of the training dataset
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_features_file_name, d);
     std::vector<uint64_t> training_labels = readLabelsAsInt(train_labels_file_name);
@@ -35,7 +35,7 @@ int main(int argc, char const *argv[]){
     std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
 
     // Load the validation dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
-	start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::high_resolution_clock::now();
     std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_features_file_name, d);
     std::vector<uint64_t> val_labels = readLabelsAsInt(val_labels_file_name);
     end = std::chrono::high_resolution_clock::now();
