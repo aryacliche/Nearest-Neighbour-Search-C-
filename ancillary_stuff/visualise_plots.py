@@ -47,7 +47,8 @@ def main():
     algo = sys.argv[2]
     allocated_threads = 24
 
-    working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/alt_temp/{dataset}/{algo}'
+    working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{dataset}/{algo}'
+    os.makedirs(working_dir, exist_ok=True)
     count_files = [f for f in os.listdir(working_dir) if 'counts' in f]
     
     for i in range(int(np.ceil(len(count_files) / allocated_threads))):

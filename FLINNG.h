@@ -421,8 +421,24 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     }
     #endif
 
-    // Checking against all the masks
-    std::vector<uint64_t> reported_neighbours = flinng.query(query_hash_values, K, temp_dir);
+    // Checking against all the masks (we will force it to return 10 * K neighbours and then further filter it)
+    std::vector<uint64_t> filtered_neighbours = flinng.query(query_hash_values, 10 * K, temp_dir);
+    
+    std::vector<uint64_t> reported_neighbours(K * num_queries);
+    for (auto i = 0 ; i < num_queries; i++) {   // Doing exhaustive search on the smaller "dataset"
+      ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
+        
+      for (auto j = 0; j < 10 * K; j++) {
+          double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[filtered_neighbours[i * 10 * K + j]].values);
+          ReportedNeighbours->checkAndInsert(i * 10 * K + j, distance);
+      }
+
+      std::vector<uint64_t> curr_reported_neighbours = ReportedNeighbours->topKNeighbours();
+      for (auto j = 0; j < K; j++) {
+        reported_neighbours[i * K + j] = curr_reported_neighbours[j];
+      }
+      
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
