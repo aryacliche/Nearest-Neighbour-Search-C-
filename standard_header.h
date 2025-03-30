@@ -105,3 +105,71 @@ void dataMatrixFromVGGNETFeatures (std::vector<VGGNetFeature> features, double**
         }
     }
 }
+
+class LabelMaker {  // This linked list is for keeping track of the frequency of labels seen
+    struct Label {
+        size_t index;
+        int count;
+        Label* lessPopular;
+        Label* morePopular;
+        
+        Label(size_t index, Label* morePopular) : index(index), count(1), lessPopular(nullptr), morePopular(morePopular ) {}
+    };
+    
+    Label* mostPopular;
+
+    public:
+        LabelMaker(){
+            mostPopular = nullptr;
+        }
+
+        void updateCounters(size_t index) {
+            Label* current = mostPopular;
+            Label* previous = nullptr;
+            while (true) {
+                if (current == nullptr) {  // We have reached the end of the list. We need to make a new node
+                    Label* newLabel = new Label(index, previous);
+                    if (previous != nullptr) {
+                        previous->lessPopular = newLabel;
+                    }
+                    else { // This is the only node in the list thus is the most popular
+                        mostPopular = newLabel;
+                    }
+                    break;  // We don't need to look further
+                }
+                else {  // we have not yet reached the end of the list
+                    if (current->index == index) {  // We have a match
+                        current->count++;
+                        // Now we will sit down and swap with each of the more popular nodes if applicable
+                        while (current->morePopular != nullptr && current->count > current->morePopular->count) {
+                            size_t temp_count = current->count;
+                            size_t temp_index = current->index;
+                            current->count = current->morePopular->count;
+                            current->index = current->morePopular->index;
+                            current->morePopular->count = temp_count;
+                            current->morePopular->index = temp_index;
+
+                            // Now we will go one step up the list
+                            current = current->morePopular;
+                        }
+                        break;
+                    }
+                    else {  // This one wasn't a match, let's go lower into the list
+                        previous = current;
+                        current = current->lessPopular;
+                    }
+                }
+            }
+        }
+
+        std::vector<size_t> topKLabels(size_t k) {
+            Label* current = mostPopular;
+            std::vector<size_t> topK;
+            while (current != nullptr && topK.size() < k) {
+                topK.push_back(current->count);
+                current = current->lessPopular;
+            }
+            return topK;
+        }
+
+};

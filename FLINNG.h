@@ -534,18 +534,30 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #pragma omp parallel for
     for (auto i = 0; i < num_queries; i ++) {
         double true_positives = 0.0;
+        LabelMaker* labelmaker = new LabelMaker(); // To keep track of the golden labels
         for (auto j = i * K; j < (i + 1) * K; ++j) {
-            if (std::find(reported_neighbours.begin() + i * K, reported_neighbours.begin() + (i + 1) * K, golden_neighbours[j]) != reported_neighbours.begin() + (i + 1) * K) {
+          for (auto k = 0; k < K; k++) {
+            labelmaker->updateCounters(golden_neighbours[j]);
+          }
+          
+          if (std::find(reported_neighbours.begin() + i * K, reported_neighbours.begin() + (i + 1) * K, golden_neighbours[j]) != reported_neighbours.begin() + (i + 1) * K) {
                 true_positives++;
-            }
+          }
         }
+        std::vector<size_t> distribution_of_labels = labelmaker->topKLabels(5);
         precision[i] = true_positives / double(K);
         recall[i] = true_positives / double(K);
+
         #pragma omp critical
         {
             std::cout << "-----------" << std::endl;
             std::cout << "| Precision = " << precision[i] << std::endl;
             std::cout << "| Recall = " << recall[i] << std::endl;
+            std::cout << "| Distribution =";
+            for (auto j = 0; j < distribution_of_labels.size(); j++) {
+                std::cout << " " << distribution_of_labels[j] / double(K);
+            }
+            std::cout << std::endl;
             std::cout << "-----------" << std::endl;
         }
     }
