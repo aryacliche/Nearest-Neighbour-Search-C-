@@ -6,7 +6,7 @@ group_creation_algorithm=$4
 R=${5:-3}
 N_force=${6:--1}
 temp_name=${7:-temp}
-temp_dir="${temp_name}/${dataset}/${group_creation_algorithm}"
+temp_dir="${temp_name}/${layer}/${dataset}/${group_creation_algorithm}"
 
 if [ ! -d "${temp_dir}" ]; then
     mkdir -p "${temp_dir}"

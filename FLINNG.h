@@ -90,7 +90,7 @@ class Flinng {
     
       // All the hashes for point 1 come first, etc.
       // Size of hashes should be multiple of num_hash_tables
-      void addPoints(std::vector<uint64_t> hashes, std::string group_formation_algorithm, std::vector<uint64_t> &training_labels, std::string temp_dir) {
+      void addPoints(std::vector<uint64_t> hashes, std::string group_formation_algorithm, std::vector<uint64_t> &training_labels) {
     
         uint64_t num_points = hashes.size() / num_hash_tables;
         std::vector<uint64_t> buckets(num_rows * num_points);   // A bucket maps which cells a single point will be part of. It consists of R such mappings per point.
@@ -381,7 +381,7 @@ void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_
     std::cout << "Time for making hash values: " << elapsed_seconds.count() << "ms\n";
 
     // Adding the points to the FLINNG index
-    flinng.addPoints(hashes, group_formation_algorithm, training_labels, temp_dir);
+    flinng.addPoints(hashes, group_formation_algorithm, training_labels);
 
     std::cout << "FLINNG index created successfully\n";
 
@@ -430,7 +430,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
         
       for (auto j = 0; j < 10 * K; j++) {
           double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[filtered_neighbours[i * 10 * K + j]].values);
-          ReportedNeighbours->checkAndInsert(i * 10 * K + j, distance);
+          ReportedNeighbours->checkAndInsert(filtered_neighbours[i * 10 * K + j], distance);
       }
 
       std::vector<uint64_t> curr_reported_neighbours = ReportedNeighbours->topKNeighbours();
@@ -563,7 +563,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
 
 bool checkMetadata(std::string temp_dir, int N, int B, int R, int m, int d, int l, double w) {
     std::ifstream metadata_file(temp_dir + "/metadata.json");
-    if (!metadata_file) {
+    if (!metadata_file) { // It doesn't exist yet
         return false;
     }
 
