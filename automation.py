@@ -18,21 +18,33 @@ def main():
         else:
             w_range = [1.0, 5.0, 10.0, 30.0, 50.0]
     
-    json_file_path = 'config.json'
+    
     for r in range(20, 1, -3):
         for w in w_range:
-            with open(json_file_path, 'r') as file:
-                data = json.load(file)
-            
-            m = data['m']
-            data['R'] = r
-            data['w'] = w
-
-            with open(json_file_path, 'w') as file:
-                json.dump(data, file, indent=4)
-
             for dataset in dataset_range:
                 for group_formation in ['labelled', 'clustered']:
+                    json_file_path = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{group_formation}/config.json'
+                    if not os.path.exists(json_file_path):
+                        os.makedirs(os.path.dirname(json_file_path), exist_ok=True)
+                        default_data = {
+                            "R": 20,
+                            "t": 50,
+                            "m": 400,
+                            "L": 12,
+                            "w" : 1.0
+                        }
+                        with open(json_file_path, 'w') as file:
+                            json.dump(default_data, file, indent=4)
+
+                    with open(json_file_path, 'r') as file:
+                        data = json.load(file)
+                    
+                    m = data['m']
+                    data['R'] = r
+                    data['w'] = w
+
+                    with open(json_file_path, 'w') as file:
+                        json.dump(data, file, indent=4)
                     print(f"Running for {dataset} and {group_formation}")
                     subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{r}'])
                     if mode == 'visualise':        

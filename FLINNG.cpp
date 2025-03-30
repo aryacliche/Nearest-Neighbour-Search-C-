@@ -48,7 +48,7 @@ int main(int argc, char const *argv[]){
     training_features.resize(N);    // We only keep the first N features of the training set
 
     // Parameters that should be read from a config file
-    std::ifstream config_file("config.json");
+    std::ifstream config_file(temp_dir + "/config.json");
     if (!config_file) {
         return false;
     }
