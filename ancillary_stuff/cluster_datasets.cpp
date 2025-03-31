@@ -2,8 +2,9 @@
 
 int main(int argc, char const *argv[])
 {
-	if (argc < 3) {
-		std::cerr << "Usage: " << argv[0] << " <train_data_file> <val_data_file> [num_clusters] [N]" << std::endl;
+	if (argc < 4) {
+		std::cerr << "Usage: " << argv[0] << " <train_data_file> <val_data_file> <num_passes> [num_clusters] [N]" << std::endl;
+		std::cerr << "num_passes : Number of time we repeat the clustering" << std::endl;
 		std::cerr << "num_clusters : Number of clusters (Use -1 for automated value) (default : empty)" << std::endl;
 		std::cerr << "N : Limit on the number of datapoints to consider (Use -1 for unrestricted) (default : empty)" << std::endl;
 		return 1;
@@ -11,13 +12,14 @@ int main(int argc, char const *argv[])
 
 	const std::string train_filename = argv[1];//"data/vggnet_imagenet_train_features.bin";
 	const std::string val_filename = argv[2];//"data/vggnet_imagenet_val_features.bin";
+	int num_passes = atoi(argv[3]);
 	int num_clusters = -1;
-	if (argc > 3) {
-		num_clusters = std::stoi(argv[3]); // Number of clusters
+	if (argc > 4) {
+		num_clusters = std::stoi(argv[4]); // Number of clusters
 	}
 	uint64_t forced_N = -1;
-	if (argc > 4) {
-		forced_N = std::stoi(argv[4]);
+	if (argc > 5) {
+		forced_N = std::stoi(argv[5]);
 	}
 	int num_threads = 24;
 	omp_set_num_threads(num_threads);
@@ -30,6 +32,15 @@ int main(int argc, char const *argv[])
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed_seconds = end - start;
 	std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
+
+#ifdef DEBUG
+	for (auto i = 0 ; i < 10; i ++ ) {
+		for (auto j = 0; j < training_d; j ++ ) {
+			std::cout << training_features[i].values[j] << " ";
+		}
+		std::cout << std::endl;
+	}
+#endif
 
 	uint64_t N = (forced_N != -1) ? min(forced_N, static_cast<uint64_t>(training_features.size())) : training_features.size();
 	training_features.resize(N);    // We only keep the first N features of the training set
