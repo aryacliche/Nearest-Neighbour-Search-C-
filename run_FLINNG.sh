@@ -42,6 +42,6 @@ else
 fi
 
 if [ "${mode}" == "visualise" ]; then
-    echo "python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}"
-    python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm}
+    echo "python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm} ${layer}"
+    python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm} ${layer}
 fi

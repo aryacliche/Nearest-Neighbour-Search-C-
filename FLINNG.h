@@ -422,23 +422,23 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #endif
 
     // Checking against all the masks (we will force it to return 10 * K neighbours and then further filter it)
-    std::vector<uint64_t> reported_neighbours = flinng.query(query_hash_values, K, temp_dir);
+    std::vector<uint64_t> filtered_neighbours = flinng.query(query_hash_values, 10 * K, temp_dir);
     
-    // std::vector<uint64_t> reported_neighbours(K * num_queries);
-    // for (auto i = 0 ; i < num_queries; i++) {   // Doing exhaustive search on the smaller "dataset"
-    //   ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
+    std::vector<uint64_t> reported_neighbours(K * num_queries);
+    for (auto i = 0 ; i < num_queries; i++) {   // Doing exhaustive search on the smaller "dataset"
+      ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
-    //   for (auto j = 0; j < 10 * K; j++) {
-    //       double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[filtered_neighbours[i * 10 * K + j]].values);
-    //       ReportedNeighbours->checkAndInsert(filtered_neighbours[i * 10 * K + j], distance);
-    //   }
+      for (auto j = i * 10 * K; j < (i + 1) * 10 * K; j++) {
+          double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[filtered_neighbours[j]].values);
+          ReportedNeighbours->checkAndInsert(filtered_neighbours[j], distance);
+      }
 
-    //   std::vector<uint64_t> curr_reported_neighbours = ReportedNeighbours->topKNeighbours();
-    //   for (auto j = 0; j < K; j++) {
-    //     reported_neighbours[i * K + j] = curr_reported_neighbours[j];
-    //   }
+      std::vector<uint64_t> curr_reported_neighbours = ReportedNeighbours->topKNeighbours();
+      for (auto j = 0; j < K; j++) {
+        reported_neighbours[i * K + j] = curr_reported_neighbours[j];
+      }
       
-    // }
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -467,38 +467,27 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
+        #ifdef DEBUG
+        std::cout << "Distances!\n";
+        #endif
         for (auto j = 0; j < training_features.size(); j++) {
             double distance = euclideanDistance(val_features[query_indices[i]].values, training_features[j].values);
             ReportedNeighbours->checkAndInsert(j, distance);
+            #ifdef DEBUG
+            std::cout << j << " : " << distance << ", ";
+            #endif
         }
 
-        #pragma omp critical
-        {        
-          #ifdef DEBUG
-            naive_file << query_indices[i] << ",";
-          #endif
-          std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
-          #ifdef VISUALISE
-          std::vector<uint64_t> smallestDistances = ReportedNeighbours->smallestKDistances();
-          std::ofstream dist_file(temp_dir+"/distances_"+std::to_string(i)+".csv", std::ios::trunc);
-          if (!dist_file) {
-              throw std::runtime_error("Cannot open distances CSV file");
-          }
-          dist_file << "neighbour,distance\n";
-          for (auto i = 0; i < K; i++) {
-              dist_file << curr_golden_neighbours[i] << "," << smallestDistances[i] << "\n";
-          }
-          dist_file.close();
-          #endif
+        std::vector<uint64_t> curr_golden_neighbours = ReportedNeighbours->topKNeighbours();
+        #ifdef DEBUG
+          std::cout << "Curr_goldens = ";
           for (auto j = 0; j < K; j++) {
-              golden_neighbours[i * K + j] = curr_golden_neighbours[j];
-              #ifdef DEBUG
-              naive_file << curr_golden_neighbours[j] << ",";
-              #endif
+              std::cout << curr_golden_neighbours[j] << " ";
           }
-          #ifdef DEBUG
-          naive_file << '\n';
-          #endif
+          std::cout << std::endl;
+        #endif
+        for (auto j = 0; j < K; j++) {
+            golden_neighbours[i * K + j] = curr_golden_neighbours[j];
         }
     }
     #ifdef DEBUG
@@ -536,15 +525,13 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
         double true_positives = 0.0;
         LabelMaker* labelmaker = new LabelMaker(); // To keep track of the golden labels
         for (auto j = i * K; j < (i + 1) * K; ++j) {
-          for (auto k = 0; k < K; k++) {
-            labelmaker->updateCounters(golden_neighbours[j]);
-          }
+          labelmaker->updateCounters(golden_neighbours[j]);
           
           if (std::find(reported_neighbours.begin() + i * K, reported_neighbours.begin() + (i + 1) * K, golden_neighbours[j]) != reported_neighbours.begin() + (i + 1) * K) {
                 true_positives++;
           }
         }
-        std::vector<size_t> distribution_of_labels = labelmaker->topKLabels(5);
+        std::vector<double> distribution_of_labels = labelmaker->topKLabels(5);
         precision[i] = true_positives / double(K);
         recall[i] = true_positives / double(K);
 

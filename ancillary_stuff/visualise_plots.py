@@ -45,9 +45,10 @@ def collision_diags(working_dir, collision_file):
 def main():
     dataset = sys.argv[1]
     algo = sys.argv[2]
+    layer = sys.argv[3]
     allocated_threads = 24
 
-    working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{dataset}/{algo}'
+    working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{algo}'
     os.makedirs(working_dir, exist_ok=True)
     count_files = [f for f in os.listdir(working_dir) if 'counts' in f]
     

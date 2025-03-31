@@ -48,7 +48,7 @@ std::vector<VGGNetFeature> readVGGNetFeatures(const std::string& filename, int &
 }
 
 double euclideanDistance(const std::vector<float>& a, const std::vector<float>& b) {
-    std::vector<float> diff;
+    std::vector<float> diff(a.size());
     std::transform(a.begin(), a.end(), b.begin(), diff.begin(),
                    [](float x, float y) { return x - y; });
     
@@ -162,11 +162,11 @@ class LabelMaker {  // This linked list is for keeping track of the frequency of
             }
         }
 
-        std::vector<size_t> topKLabels(size_t k) {
+        std::vector<double> topKLabels(size_t k) {
             Label* current = mostPopular;
-            std::vector<size_t> topK;
+            std::vector<double> topK;
             while (current != nullptr && topK.size() < k) {
-                topK.push_back(current->count);
+                topK.push_back((double)(current->count));
                 current = current->lessPopular;
             }
             return topK;

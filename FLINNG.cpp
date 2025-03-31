@@ -50,6 +50,8 @@ int main(int argc, char const *argv[]){
     // Parameters that should be read from a config file
     std::ifstream config_file(temp_dir + "/config.json");
     if (!config_file) {
+        std::cout << "Could not open config file. Please make sure it exists.\n";
+        std::cout << "Exiting...\n";
         return false;
     }
     nlohmann::json config;

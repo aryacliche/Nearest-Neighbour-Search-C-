@@ -22,7 +22,7 @@ def main():
     for r in range(20, 1, -3):
         for w in w_range:
             for dataset in dataset_range:
-                for group_formation in ['labelled', 'clustered']:
+                for group_formation in ['labelled', 'clustered', 'random']:
                     json_file_path = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{group_formation}/config.json'
                     if not os.path.exists(json_file_path):
                         os.makedirs(os.path.dirname(json_file_path), exist_ok=True)
