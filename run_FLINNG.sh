@@ -14,10 +14,12 @@ fi
 
 if [ "${dataset}" == "mirflickr" ]; then
     data_prefix="/hard-disk-2/users/aryavishe/data"
+elif [ "${dataset}" == "instacities" ]; then
+    data_prefix="/hard-disk-2/users/aryavishe/data"
 elif [ "${dataset}" == "imagenet" ]; then
     data_prefix="/home/aryavishe/Nearest-Neighbour-Search-C-/data"
 else
-    echo "Invalid dataset specified. Use 'mirflickr', 'nuswide', or 'coco'."
+    echo "Invalid dataset specified. Use 'mirflickr', 'instacities', or 'imagenet'."
     exit 1
 fi
 
