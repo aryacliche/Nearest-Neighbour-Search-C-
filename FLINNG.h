@@ -389,7 +389,7 @@ void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_
     flinng.save_to_disk(temp_dir);
 }
 
-double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::vector<int> &query_indices, std::vector<VGGNetFeature> &val_features, uint32_t K, int num_queries, int m, int l, double w, std::string temp_dir, Flinng &flinng, std::vector<VGGNetFeature> &training_features) {
+double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::vector<int> &query_indices, std::vector<VGGNetFeature> &val_features, uint32_t K, int num_queries, int m, int l, double w, std::string temp_dir, Flinng &flinng, std::vector<VGGNetFeature> &training_features, std::vector<uint64_t> &training_labels) {
     std::vector<uint64_t> query_hash_values(num_queries * m);   // This stores the hash values of the query
     auto start = std::chrono::high_resolution_clock::now();
     
@@ -525,7 +525,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
         double true_positives = 0.0;
         LabelMaker* labelmaker = new LabelMaker(); // To keep track of the golden labels
         for (auto j = i * K; j < (i + 1) * K; ++j) {
-          labelmaker->updateCounters(golden_neighbours[j]);
+          labelmaker->updateCounters(training_labels[golden_neighbours[j]]);
           
           if (std::find(reported_neighbours.begin() + i * K, reported_neighbours.begin() + (i + 1) * K, golden_neighbours[j]) != reported_neighbours.begin() + (i + 1) * K) {
                 true_positives++;

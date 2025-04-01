@@ -108,12 +108,12 @@ void dataMatrixFromVGGNETFeatures (std::vector<VGGNetFeature> features, double**
 
 class LabelMaker {  // This linked list is for keeping track of the frequency of labels seen
     struct Label {
-        size_t index;
+        uint64_t index;
         int count;
         Label* lessPopular;
         Label* morePopular;
         
-        Label(size_t index, Label* morePopular) : index(index), count(1), lessPopular(nullptr), morePopular(morePopular ) {}
+        Label(uint64_t index, Label* morePopular) : index(index), count(1), lessPopular(nullptr), morePopular(morePopular ) {}
     };
     
     Label* mostPopular;
@@ -123,7 +123,7 @@ class LabelMaker {  // This linked list is for keeping track of the frequency of
             mostPopular = nullptr;
         }
 
-        void updateCounters(size_t index) {
+        void updateCounters(uint64_t index) {
             Label* current = mostPopular;
             Label* previous = nullptr;
             while (true) {
@@ -143,7 +143,7 @@ class LabelMaker {  // This linked list is for keeping track of the frequency of
                         // Now we will sit down and swap with each of the more popular nodes if applicable
                         while (current->morePopular != nullptr && current->count > current->morePopular->count) {
                             size_t temp_count = current->count;
-                            size_t temp_index = current->index;
+                            uint64_t temp_index = current->index;
                             current->count = current->morePopular->count;
                             current->index = current->morePopular->index;
                             current->morePopular->count = temp_count;
