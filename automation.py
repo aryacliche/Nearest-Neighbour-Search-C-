@@ -16,14 +16,16 @@ def main():
         if dataset_mode == 'imagenet':
             w_range = [1.0, 5.0, 10.0, 30.0, 50.0]
         else:
-            w_range = [1.0, 5.0, 10.0, 30.0, 50.0]
+            w_range = [0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
 
+    group_formation_modes = ['labelled', 'clustered', 'random'] 
+    temp_root_path = '/hard-disk-2/users/aryavishe/temp'
 
-    for r in range(20, 1, -3):
+    for r in range(40, 20, -3):
         for w in w_range:
             for dataset in dataset_range:
-                for group_formation in ['labelled', 'clustered', 'random']:
-                    json_file_path = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{group_formation}/config.json'
+                for group_formation in group_formation_modes: 
+                    json_file_path = f'{temp_root_path}/{layer}/{dataset}/{group_formation}/config.json'
                     if not os.path.exists(json_file_path):
                         os.makedirs(os.path.dirname(json_file_path), exist_ok=True)
                         default_data = {
@@ -47,7 +49,7 @@ def main():
                         json.dump(data, file, indent=4)
                     print(f"Running for {dataset} and {group_formation}")
                     subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{r}'])
-                    src_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{group_formation}/'
+                    src_dir = f'{temp_root_path}/{layer}/{dataset}/{group_formation}/'
                     dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history/{layer}/history_{m}/{dataset}/{group_formation}/'
                     os.makedirs(dest_dir, exist_ok=True)
                     total_files = ['results.csv', 'log.out']
