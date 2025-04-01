@@ -130,7 +130,7 @@ int main(int argc, char const *argv[]){
     }
     
     // We run the online querying phase
-    double running_total_time = evaluateQuery(vecs, t_vals, query_indices, val_features, K, num_queries, m, l, w, temp_dir, flinng, training_features);
+    double running_total_time = evaluateQuery(vecs, t_vals, query_indices, val_features, K, num_queries, m, l, w, temp_dir, flinng, training_features, training_labels);
     
     std::cout << "Average time: " << running_total_time / num_queries << "ms\n";
     std::cout << "Done" << std::endl;

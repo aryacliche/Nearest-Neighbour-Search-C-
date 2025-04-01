@@ -81,16 +81,15 @@ int main(int argc, char const *argv[])
 
 	// We will now cluster the data
 	int** mask = new int*[N];
+	double* weight = new double[d];
 	for (uint64_t i = 0; i < N; ++i) {
 		mask[i] = new int[d];
 		for (int j = 0; j < d; ++j) {
 			mask[i][j] = 1;
 		}
-	}
-	double* weight = new double[d];
-	for (int i = 0; i < d; ++i) {
 		weight[i] = 1.0;
 	}
+	
 	int *clusterid = new int[N];
 	double* error = new double[N];
 	int ifound;

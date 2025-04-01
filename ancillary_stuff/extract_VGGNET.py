@@ -57,9 +57,6 @@ def process_folder(folder_path, input_dir, output_dir, feature_extractor):
     files = os.listdir(folder_path)
 
     for file in files:
-        # Had to bring in this line because of the computer failing midway once
-        if file in ['chicago', 'london', 'melbourne', 'newyork', 'sanfrancisco', 'sydney']:
-            continue
         file_path = os.path.join(folder_path, file)
         if os.path.isdir(file_path):
             print(f"In {file} right now!")
