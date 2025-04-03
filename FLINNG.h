@@ -167,18 +167,6 @@ class Flinng {
             }
           }
 
-          #ifdef VISUALISE
-          std::ofstream counts_file(temp_dir + "/counts_"+std::to_string(query_id)+".csv", std::ios::trunc);
-          if (!counts_file) {
-              throw std::runtime_error("Cannot open counts CSV file");
-          }
-          counts_file << "row,cell,count\n";
-          for (uint32_t i = 0; i < num_rows * cells_per_row; i++) {
-              counts_file << i / cells_per_row << "," << i % cells_per_row << "," << counts[i] << "\n";
-          }
-          counts_file.close();
-          #endif
-    
           std::vector<uint32_t> sorted[num_hash_tables + 1];
           uint32_t size_guess = num_rows * cells_per_row / (num_hash_tables + 1);
           for (std::vector<uint32_t> &v : sorted) {
@@ -189,20 +177,11 @@ class Flinng {
             sorted[counts[i]].push_back(i);
           }
 
-          #ifdef VISUALISE
-          std::ofstream col_file(temp_dir + "/collisions_"+std::to_string(query_id)+".csv", std::ios::trunc);
-          if (!col_file) {
-              throw std::runtime_error("Cannot open collisions CSV file");
-          }
-          col_file << "num_collisions,freq\n";
-          for (uint32_t i = 0; i < num_hash_tables + 1; i++) {
-            col_file << i << "," << sorted[i].size() << "\n";
-          }
-          col_file.close();
-          #endif
+          #ifdef DEBUG
           for (uint32_t i = 0; i < num_hash_tables + 1; ++i) {
             DEBUG_PRINT << "collisions = " << i << " : " << sorted[i].size() << std::endl;
           }
+          #endif
     
           if (num_rows > 2) {
             std::vector<uint8_t> num_counts(total_points_added, 0);
@@ -239,10 +218,33 @@ class Flinng {
               }
             }
           }
-        end_of_query:;
-        }
+          end_of_query:;
+
+          #ifdef VISUALISE
+          std::ofstream col_file(temp_dir + "/collisions_"+std::to_string(query_id)+".csv", std::ios::trunc);
+          if (!col_file) {
+              throw std::runtime_error("Cannot open collisions CSV file");
+          }
+          col_file << "num_collisions,freq\n";
+          for (uint32_t i = 0; i < num_hash_tables + 1; i++) {
+            col_file << i << "," << sorted[i].size() << "\n";
+          }
+          col_file.close();
+
+          std::ofstream counts_file(temp_dir + "/counts_"+std::to_string(query_id)+".csv", std::ios::trunc);
+          if (!counts_file) {
+              throw std::runtime_error("Cannot open counts CSV file");
+          }
+          counts_file << "row,cell,count\n";
+          for (uint32_t i = 0; i < num_rows * cells_per_row; i++) {
+              counts_file << i / cells_per_row << "," << i % cells_per_row << "," << counts[i] << "\n";
+          }
+          counts_file.close();
+          #endif
     
-        return results;
+        }
+      
+      return results;
       }
     
       //// ARYA : I ADDED THIS!
@@ -461,9 +463,6 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #endif
     start = std::chrono::high_resolution_clock::now();
 
-    #ifdef VISUALISE
-    #pragma omp parallel for shared(golden_neighbours) // For now we want to only output the serialised values of nearest neighbour computation
-    #endif
     for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
