@@ -1,5 +1,6 @@
 import json
 import subprocess
+import shutil
 import os
 import sys
 from plotter import single_use
@@ -8,6 +9,10 @@ def main():
     mode = sys.argv[1] # 'visualise' or 'nah'
     layer =  sys.argv[2] # last or secondlast
     dataset_mode = sys.argv[3]
+    if len(sys.argv) > 4:
+        executable_name = sys.argv[4]
+    else:
+        executable_name = 'a'
     if dataset_mode == None:
         dataset_range = ['imagenet', 'mirflickr']
         w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
@@ -21,7 +26,7 @@ def main():
     group_formation_modes = ['labelled', 'clustered', 'random'] 
     temp_root_path = '/hard-disk-2/users/aryavishe/temp'
 
-    for r in range(40, 20, -3):
+    for r in range(40, 1, -3):
         for w in w_range:
             for dataset in dataset_range:
                 for group_formation in group_formation_modes: 
@@ -31,7 +36,7 @@ def main():
                         default_data = {
                                 "R": 20,
                                 "t": 50,
-                                "m": 400,
+                                "m": 4096,
                                 "L": 12,
                                 "w" : 1.0
                                 }
@@ -41,14 +46,14 @@ def main():
                     with open(json_file_path, 'r') as file:
                         data = json.load(file)
 
-                    m = data['m']
+                    m = 4096 # Hard-coded for now
                     data['R'] = r
                     data['w'] = w
 
                     with open(json_file_path, 'w') as file:
                         json.dump(data, file, indent=4)
                     print(f"Running for {dataset} and {group_formation}")
-                    subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{r}'])
+                    subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{executable_name}', f'{r}'])
                     src_dir = f'{temp_root_path}/{layer}/{dataset}/{group_formation}/'
                     dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history/{layer}/history_{m}/{dataset}/{group_formation}/'
                     os.makedirs(dest_dir, exist_ok=True)
@@ -64,7 +69,10 @@ def main():
                     for filename in total_files:
                         src_file = os.path.join(src_dir, filename)
                         dest_file = os.path.join(dest_dir, f'{r}_{w}_{filename}')
-                        os.rename(src_file, dest_file)
+                        try:
+                            shutil.move(src_file, dest_file)
+                        except Exception as e:
+                            print(f"An unexpected error occurred: {e}")
                     if mode == 'visualise':        
                         try:
                             # Now we will plot the precision vs recall for all of the graphs

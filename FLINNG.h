@@ -463,6 +463,9 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     #endif
     start = std::chrono::high_resolution_clock::now();
 
+    #ifdef SPEEDY
+    #pragma omp paralllel for
+    #endif
     for (auto i=0; i < num_queries; i++) {
         ProspectiveNeighbours* ReportedNeighbours = new ProspectiveNeighbours(K);
         
@@ -493,7 +496,13 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
     naive_file.close();
     #endif
     end = std::chrono::high_resolution_clock::now();
+#ifndef SPEEDY
     auto naive_elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+#endif
+#ifdef SPEEDY
+    int num_threads = omp_get_num_threads();
+    auto naive_elapsed_seconds = num_threads * std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+#endif
     std::cout << "Naive Search took : " << naive_elapsed_seconds.count() << "ms\n";
 
     #ifdef DEBUG

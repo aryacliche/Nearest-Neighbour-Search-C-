@@ -3,9 +3,10 @@ mode=$1
 dataset=$2
 layer=$3
 group_creation_algorithm=$4
-R=${5:-3}
-N_force=${6:--1}
-temp_name=${7:-temp}
+executable_name=${5:-a}
+R=${6:-3}
+N_force=${7:--1}
+temp_name=${8:-temp}
 temp_dir="/hard-disk-2/users/aryavishe/${temp_name}/${layer}/${dataset}/${group_creation_algorithm}"
 
 if [ ! -d "${temp_dir}" ]; then
@@ -38,11 +39,11 @@ train_prefix="${data_prefix}/${layer_prefix}_${dataset}_train"
 val_prefix="${data_prefix}/${layer_prefix}_${dataset}_val"
 
 if [ "${group_creation_algorithm}" == "clustered" ]; then
-    echo "./a.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_clustered_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} labelled ${N_force}"
-    ./a.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_clustered_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} labelled ${N_force} > ${temp_dir}/log.out
+    echo "./${executable_name}.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_clustered_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} labelled ${N_force}"
+    ./${executable_name}.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_clustered_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} labelled ${N_force} > ${temp_dir}/log.out
 else
-    echo "./a.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
-    ./a.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
+    echo "./${executable_name}.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force}"
+    ./${executable_name}.out "${train_prefix}_features.bin" "${val_prefix}_features.bin" "${train_prefix}_labels.txt" "${val_prefix}_labels.txt" ${temp_dir} ${group_creation_algorithm} ${N_force} > ${temp_dir}/log.out
 fi
 
 if [ "${mode}" == "visualise" ]; then

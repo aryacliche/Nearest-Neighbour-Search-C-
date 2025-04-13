@@ -24,7 +24,7 @@ def main():
         except:
             naive_time = None
             flinng_time = None
-
+    
         if local_max_precision > max_precision:
             max_precision = local_max_precision
             max_precision_file = file
