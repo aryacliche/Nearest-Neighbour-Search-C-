@@ -7,7 +7,7 @@ from plotter import single_use
 
 def main():
     mode = sys.argv[1] # 'visualise' or 'nah'
-    layer =  sys.argv[2] # last or secondlast
+    layer =  sys.argv[2] # last or secondlast or lda_last or lda_secondlast
     dataset_mode = sys.argv[3]
     if len(sys.argv) > 4:
         executable_name = sys.argv[4]
@@ -36,7 +36,7 @@ def main():
                         default_data = {
                                 "R": 20,
                                 "t": 50,
-                                "m": 4096,
+                                "m": 400,
                                 "L": 12,
                                 "w" : 1.0
                                 }
@@ -46,7 +46,7 @@ def main():
                     with open(json_file_path, 'r') as file:
                         data = json.load(file)
 
-                    m = 4096 # Hard-coded for now
+                    m = 400 # Hard-coded for now
                     data['R'] = r
                     data['w'] = w
 

@@ -30,6 +30,10 @@ if [ "${layer}" == "last" ]; then
     layer_prefix="vggnet_outputs"
 elif [ "${layer}" == "secondlast" ]; then
     layer_prefix="vggnet_features"
+elif [ "${layer}" == "lda_secondlast" ]; then
+    layer_prefix="lda_vggnet_features"
+elif [ "${layer}" == "lda_last" ]; then
+    layer_prefix="lda_vggnet_outputs"
 else   
     echo "Invalid layer specified. Use 'last' or 'secondlast'."
     exit 1
