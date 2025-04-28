@@ -4,9 +4,8 @@ dataset=$2
 layer=$3
 group_creation_algorithm=$4
 executable_name=${5:-a}
-R=${6:-3}
-N_force=${7:--1}
-temp_name=${8:-temp}
+N_force=${6:--1}
+temp_name=${7:-temp}
 temp_dir="/hard-disk-2/users/aryavishe/${temp_name}/${layer}/${dataset}/${group_creation_algorithm}"
 
 if [ ! -d "${temp_dir}" ]; then

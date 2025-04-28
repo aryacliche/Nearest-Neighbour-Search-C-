@@ -230,27 +230,27 @@ class Flinng {
 end_of_query:;
 
 #ifdef VISUALISE
-	     std::ofstream col_file(temp_dir + "/collisions_"+std::to_string(query_id)+".csv", std::ios::trunc);
-	     if (!col_file) {
-		     throw std::runtime_error("Cannot open collisions CSV file");
-	     }
-	     col_file << "num_collisions,freq(" << discovered_threshold << "),cumulative_points\n";
-		 uint32_t cumulative_sum = 0;
-		 for (int32_t i = num_hash_tables; i >= 0; i--) {
-			 cumulative_sum += int(sorted[i].size());
-		     col_file << i << "," << sorted[i].size() << "," << cumulative_sum << "\n";
-	     }
-	     col_file.close();
+			 std::ofstream col_file(temp_dir + "/collisions_"+std::to_string(query_id)+".csv", std::ios::trunc);
+			 if (!col_file) {
+				 throw std::runtime_error("Cannot open collisions CSV file");
+			 }
+			 col_file << "num_collisions,freq(" << discovered_threshold << "),cumulative_points\n";
+			 uint32_t cumulative_sum = 0;
+			 for (int32_t i = num_hash_tables; i >= 0; i--) {
+				 cumulative_sum += int(sorted[i].size());
+				 col_file << i << "," << sorted[i].size() << "," << cumulative_sum << "\n";
+			 }
+			 col_file.close();
 
-	     std::ofstream counts_file(temp_dir + "/counts_"+std::to_string(query_id)+".csv", std::ios::trunc);
-	     if (!counts_file) {
-		     throw std::runtime_error("Cannot open counts CSV file");
-	     }
-	     counts_file << "row,cell,count\n";
-	     for (uint32_t i = 0; i < num_rows * cells_per_row; i++) {
-		     counts_file << i / cells_per_row << "," << i % cells_per_row << "," << counts[i] << "\n";
-	     }
-	     counts_file.close();
+			 std::ofstream counts_file(temp_dir + "/counts_"+std::to_string(query_id)+".csv", std::ios::trunc);
+			 if (!counts_file) {
+				 throw std::runtime_error("Cannot open counts CSV file");
+			 }
+			 counts_file << "row,cell,count\n";
+			 for (uint32_t i = 0; i < num_rows * cells_per_row; i++) {
+				 counts_file << i / cells_per_row << "," << i % cells_per_row << "," << counts[i] << "\n";
+			 }
+			 counts_file.close();
 #endif
 
 			}

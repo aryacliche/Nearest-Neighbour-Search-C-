@@ -13,7 +13,7 @@ def main():
         executable_name = sys.argv[4]
     else:
         executable_name = 'a'
-    if dataset_mode == None:
+    if dataset_mode.lower() == "all":
         dataset_range = ['imagenet', 'mirflickr', 'imdb', 'instacities']
         w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     else:
@@ -23,7 +23,7 @@ def main():
         else:
             w_range = [0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
 
-    group_formation_modes = ['labelled', 'clustered', 'random'] 
+    group_formation_modes = ['clustered', 'random', 'labelled'] 
     temp_root_path = '/hard-disk-2/users/aryavishe/temp'
 
     for r in range(40, 1, -3):
@@ -52,8 +52,10 @@ def main():
 
                     with open(json_file_path, 'w') as file:
                         json.dump(data, file, indent=4)
-                    print(f"Running for {dataset} and {group_formation}")
+                    print(f"== Running script for {dataset} and {group_formation} ==")
                     subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{executable_name}', f'{r}'])
+
+                    print(f"== Moving files from {src_dir} to {dest_dir} ==")
                     src_dir = f'{temp_root_path}/{layer}/{dataset}/{group_formation}/'
                     dest_dir = f'/hard-disk-2/users/aryavishe/last_run/{layer}/history_{m}/{dataset}/{group_formation}/'
                     os.makedirs(dest_dir, exist_ok=True)
