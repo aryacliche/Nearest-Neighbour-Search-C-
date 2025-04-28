@@ -35,7 +35,7 @@ transforms.ToTensor(),
 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-log_file = "extract_partition_convert_dataset.log"
+log_file = "extraction.log"
 
 # List all the image files in the folder
 # Function to process an image and return the output
@@ -126,7 +126,7 @@ def main():
     data_root = "/hard-disk-2/users/aryavishe/data"
     
     global log_file
-    log_file = log_file + f"_{dataset}"
+    log_file = f"extraction_{dataset}.log"
     with open(log_file, "w") as log:
         log.write("Starting the process...\n")
         log.write(f"Dataset: {dataset}\n")
