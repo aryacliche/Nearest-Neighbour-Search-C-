@@ -18,10 +18,10 @@ def main():
         w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     else:
         dataset_range = [dataset_mode]
-        if dataset_mode == 'imagenet':
+        if dataset_mode == 'imagenet': # Imagenet tends to use larger values of w
             w_range = [1.0, 5.0, 10.0, 30.0, 50.0]
         else:
-            w_range = [0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
+            w_range = [0.05, 0.1, 0.5, 1.0, 5.0, 10.0]
 
     group_formation_modes = ['clustered', 'random', 'labelled'] 
     temp_root_path = '/hard-disk-2/users/aryavishe/temp'

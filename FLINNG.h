@@ -398,8 +398,11 @@ void offlinePrep (std::vector<std::vector<float>> &vecs, std::vector<double> &t_
 
 	std::cout << "FLINNG index created successfully\n";
 
+#ifdef DO_NOT_SAVE
+	std::cout << "Not saving to disk (might save some time hopefully)\n";
 	// Save to disk
 	flinng.save_to_disk(temp_dir);
+#endif
 }
 
 double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> &t_vals, std::vector<int> &query_indices, std::vector<VGGNetFeature> &val_features, uint32_t K, int num_queries, int m, int l, double w, std::string temp_dir, Flinng &flinng, std::vector<VGGNetFeature> &training_features, std::vector<uint64_t> &training_labels) {
