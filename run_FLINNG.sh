@@ -13,6 +13,10 @@ if [ ! -d "${temp_dir}" ]; then
     mkdir -p "${temp_dir}"
 fi
 
+if [ ! -f "${temp_dir}/config.json" ]; then
+    cp /home/aryavishe/Nearest-Neighbour-Search-C-/config.json "${temp_dir}/config.json"
+fi
+
 if [ "${dataset}" == "mirflickr" ]; then
     data_prefix="/hard-disk-2/users/aryavishe/data"
 elif [ "${dataset}" == "instacities" ]; then

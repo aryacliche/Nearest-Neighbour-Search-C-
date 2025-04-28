@@ -34,11 +34,26 @@ def count_diags(working_dir, file):
 
 def collision_diags(working_dir, collision_file):
     collisions_df = pd.read_csv(f'{working_dir}/{collision_file}')
+    threshold = int(collisions_df.columns[1].split('(')[1].split(')')[0])
+    collisions_df = collisions_df.rename(columns={collisions_df.columns[1]: 'freq'})
     plt.figure(figsize=(10, 5))
-    plt.plot(collisions_df['num_collisions'], collisions_df['freq'])
+    fig, ax1 = plt.subplots()
+
+    # First y-axis
+    ax1.plot(collisions_df['num_collisions'], collisions_df['freq'], label='Frequency')
+    ax1.set_xlabel('Number of Collisions')
+    ax1.set_ylabel('Frequency', color='blue')
+    ax1.tick_params(axis='y', labelcolor='blue')
+
+    # Second y-axis
+    ax2 = ax1.twinx()
+    ax2.plot(collisions_df['num_collisions'], collisions_df['cumulative_points'], color='red', alpha=0.5, linestyle='-', label='Cumulative')
+    ax2.set_ylabel('Cumulative', color='red')
+    ax2.tick_params(axis='y', labelcolor='red')
+
+    # Title and save
     plt.title('Collisions')
-    plt.xlabel('Number of Collisions')
-    plt.ylabel('Frequency')
+    fig.tight_layout()
     plt.savefig(f'{working_dir}/{collision_file.replace(".csv", ".png")}')
     plt.close()
 
