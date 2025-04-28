@@ -44,6 +44,10 @@ std::vector<VGGNetFeature> readVGGNetFeatures(const std::string& filename, int &
         file.read(reinterpret_cast<char*>(feature.values.data()), feature_dim * sizeof(float));
     }
 
+    if (features.size() != num_points) {
+        throw std::runtime_error("Mismatch between number of points and features read");
+    }
+
     return features;
 }
 

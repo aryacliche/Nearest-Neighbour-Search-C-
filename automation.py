@@ -53,11 +53,11 @@ def main():
                     with open(json_file_path, 'w') as file:
                         json.dump(data, file, indent=4)
                     print(f"== Running script for {dataset} and {group_formation} ==")
-                    subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{executable_name}', f'{r}'])
+                    subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{executable_name}', '-1'])
 
-                    print(f"== Moving files from {src_dir} to {dest_dir} ==")
                     src_dir = f'{temp_root_path}/{layer}/{dataset}/{group_formation}/'
                     dest_dir = f'/hard-disk-2/users/aryavishe/last_run/{layer}/history_{m}/{dataset}/{group_formation}/'
+                    print(f"== Moving files from {src_dir} to {dest_dir} ==")
                     os.makedirs(dest_dir, exist_ok=True)
                     total_files = ['results.csv', 'log.out']
                     if mode == 'visualise':        

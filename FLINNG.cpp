@@ -27,6 +27,7 @@ int main(int argc, char const *argv[]){
 #endif
 
 	// Estimate the size of the training dataset
+	std::cout << "Training dataset : " << train_features_file_name << "\n";
 	auto start = std::chrono::high_resolution_clock::now();
 	std::vector<VGGNetFeature> training_features = readVGGNetFeatures(train_features_file_name, d);
 	std::vector<uint64_t> training_labels = readLabelsAsInt(train_labels_file_name);
@@ -35,6 +36,7 @@ int main(int argc, char const *argv[]){
 	std::cout << "Time for loading training dataset: " << elapsed_seconds.count() << "s\n";
 
 	// Load the validation dataset (probably VGGNET features of IMAGENET/MIRFLICKR) [Store in the heap]
+	std::cout << "Validation dataset : " << val_features_file_name << "\n";
 	start = std::chrono::high_resolution_clock::now();
 	std::vector<VGGNetFeature> val_features = readVGGNetFeatures(val_features_file_name, d);
 	std::vector<uint64_t> val_labels = readLabelsAsInt(val_labels_file_name);
@@ -70,11 +72,14 @@ int main(int argc, char const *argv[]){
 	std::vector<double> t_vals(m);
 
 	Flinng flinng(R, B, m, l);
-
+	
 	bool masks_present = checkMetadata(temp_dir, N, B, R, m, d, l, w);    
-
 	if (masks_present == false) {
+		start = std::chrono::high_resolution_clock::now();
 		offlinePrep(vecs, t_vals, temp_dir, training_features, training_labels, group_creation_algorithm, N, m, d, l, w, flinng);
+		end = std::chrono::high_resolution_clock::now();
+		elapsed_seconds = end - start;
+		std::cout << "Total time for making and saving masks: " << elapsed_seconds.count() << "s\n";
 	}
 	else {
 		flinng.load_from_disk(temp_dir);
@@ -108,6 +113,7 @@ int main(int argc, char const *argv[]){
 		std::cout << "LSH functions loaded successfully\n";
 	}
 	updateMetadata(temp_dir, N, B, R, m, d, l, w, t);   
+	std::cout << "Just to be clear N = " << N << ", B = " << B << ", R = " << R << ", m = " << m << ", d = " << d << ", l = " << l << ", w = " << w << ", t = " << t << std::endl;
 
 	// Just before we start the query phase
 	flinng.prepareForQueries();
