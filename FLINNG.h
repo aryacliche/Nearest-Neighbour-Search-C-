@@ -234,10 +234,10 @@ end_of_query:;
 	     if (!col_file) {
 		     throw std::runtime_error("Cannot open collisions CSV file");
 	     }
-	     col_file << "num_collisions,freq(" << discovered_threshold << "), cumulative_points\n";
-	     uint32_t cumulative_sum = 0;
-	     for (uint32_t i = num_hash_tables ; i >= 0 ; i--) {
-		     cumulative_sum += sorted[i].size();
+	     col_file << "num_collisions,freq(" << discovered_threshold << "),cumulative_points\n";
+		 uint32_t cumulative_sum = 0;
+		 for (int32_t i = num_hash_tables; i >= 0; i--) {
+			 cumulative_sum += int(sorted[i].size());
 		     col_file << i << "," << sorted[i].size() << "," << cumulative_sum << "\n";
 	     }
 	     col_file.close();
@@ -474,7 +474,7 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
 #endif
 	start = std::chrono::high_resolution_clock::now();
 
-#ifdef SPEEDY
+#ifdef VISUALISE
 #pragma omp paralllel for
 #endif
 	for (auto i=0; i < num_queries; i++) {
@@ -507,10 +507,10 @@ double evaluateQuery(std::vector<std::vector<float>> &vecs, std::vector<double> 
 	naive_file.close();
 #endif
 	end = std::chrono::high_resolution_clock::now();
-#ifndef SPEEDY
+#ifndef VISUALISE
 	auto naive_elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 #endif
-#ifdef SPEEDY
+#ifdef VISUALISE
 	int num_threads = omp_get_num_threads();
 	auto naive_elapsed_seconds = num_threads * std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 #endif

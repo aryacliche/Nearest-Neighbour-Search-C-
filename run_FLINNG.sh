@@ -13,6 +13,9 @@ if [ ! -d "${temp_dir}" ]; then
     mkdir -p "${temp_dir}"
 fi
 
+# Removing all older csv files
+find "${temp_dir}" -type f -name "*.csv" -exec rm -f {} +
+
 if [ ! -f "${temp_dir}/config.json" ]; then
     cp /home/aryavishe/Nearest-Neighbour-Search-C-/config.json "${temp_dir}/config.json"
 fi
@@ -56,5 +59,5 @@ fi
 
 if [ "${mode}" == "visualise" ]; then
     echo "python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm} ${layer}"
-    python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm} ${layer}
+    python3 ancillary_stuff/visualise_plots.py ${dataset} ${group_creation_algorithm} ${layer} ${temp_dir}
 fi

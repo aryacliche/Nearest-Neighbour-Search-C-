@@ -48,12 +48,14 @@ def collision_diags(working_dir, collision_file):
     # Second y-axis
     ax2 = ax1.twinx()
     ax2.plot(collisions_df['num_collisions'], collisions_df['cumulative_points'], color='red', alpha=0.5, linestyle='-', label='Cumulative')
+    ax2.plot([threshold, threshold], [0, max(collisions_df['cumulative_points'])], color='green', alpha=0.5, linestyle='--', label='Threshold')
     ax2.set_ylabel('Cumulative', color='red')
     ax2.tick_params(axis='y', labelcolor='red')
 
     # Title and save
     plt.title('Collisions')
     fig.tight_layout()
+    plt.title(f'Collisions (Threshold: {threshold}, Number of graduating cells = {collisions_df["cumulative_points"].iloc[np.where(collisions_df["num_collisions"] == threshold)[0][0]]})')
     plt.savefig(f'{working_dir}/{collision_file.replace(".csv", ".png")}')
     plt.close()
 
@@ -61,9 +63,12 @@ def main():
     dataset = sys.argv[1]
     algo = sys.argv[2]
     layer = sys.argv[3]
+    if len(sys.argv) > 4:
+        working_dir = sys.argv[4]
+    else:
+        working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{algo}'
     allocated_threads = 24
 
-    working_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/temp/{layer}/{dataset}/{algo}'
     os.makedirs(working_dir, exist_ok=True)
     count_files = [f for f in os.listdir(working_dir) if 'counts' in f]
     

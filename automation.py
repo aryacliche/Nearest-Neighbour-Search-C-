@@ -14,7 +14,7 @@ def main():
     else:
         executable_name = 'a'
     if dataset_mode == None:
-        dataset_range = ['imagenet', 'mirflickr']
+        dataset_range = ['imagenet', 'mirflickr', 'imdb', 'instacities']
         w_range = [0.05, 0.1, 0.3, 0.5, 1.0, 5.0, 10.0, 30.0, 50.0]
     else:
         dataset_range = [dataset_mode]
@@ -55,7 +55,7 @@ def main():
                     print(f"Running for {dataset} and {group_formation}")
                     subprocess.run(['./run_FLINNG.sh', f'{mode}', f'{dataset}', f'{layer}', f'{group_formation}', f'{executable_name}', f'{r}'])
                     src_dir = f'{temp_root_path}/{layer}/{dataset}/{group_formation}/'
-                    dest_dir = f'/home/aryavishe/Nearest-Neighbour-Search-C-/history/{layer}/history_{m}/{dataset}/{group_formation}/'
+                    dest_dir = f'/hard-disk-2/users/aryavishe/last_run/{layer}/history_{m}/{dataset}/{group_formation}/'
                     os.makedirs(dest_dir, exist_ok=True)
                     total_files = ['results.csv', 'log.out']
                     if mode == 'visualise':        
